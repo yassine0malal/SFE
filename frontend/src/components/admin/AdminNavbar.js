@@ -15,7 +15,7 @@ function AdminNavbar() {
 
   return (
     <nav style={styles.nav}>
-      <img src="/images/logo.png" alt="Logo" style={styles.logo} />
+      <img src="/images/logo-updated.png" alt="Logo" style={styles.logo} />
       <ul style={styles.navLinks}>
         {links.map(({ label, path }, i) => (
           <li key={i} style={styles.navLink(location.pathname === path)}>

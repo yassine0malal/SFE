@@ -267,10 +267,6 @@ import HeaderPart from '../../components/admin/header';
 import React, { useState, useEffect } from "react";
 
 export default function Accueil() {
-  // Dropdown
-  // const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
-  // const closeDropdown = () => setIsDropdownOpen(false);
 
   // // Responsive
   const [width, setWidth] = useState(window.innerWidth);
