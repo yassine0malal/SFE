@@ -1,0 +1,1 @@
+//  Authentication context for admin user
