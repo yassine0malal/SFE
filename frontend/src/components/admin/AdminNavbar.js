@@ -5,7 +5,7 @@ function AdminNavbar() {
   const links = [
     { label: "Accueil", path: "/" },
     { label: "Commentaires", path: "/commentaires" },
-    { label: "Realisations", path: "/publications" },
+    { label: "Réalisations", path: "/publications" },
     { label: "Services", path: "/services" },
     { label: "Abonnés", path: "/abonnes" },
     { label: "Contact", path: "/contact" },

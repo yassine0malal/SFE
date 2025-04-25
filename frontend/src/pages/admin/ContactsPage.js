@@ -1,94 +1,33 @@
 import React, { useState, useEffect } from "react";
 import colors from "../../constants/colors";
+import Header from "../../components/admin/header"; // <-- Import your Header
 
-const mockContacts = [
-  {
-    id: 1,
-    fullName: "Yassine Malal",
-    email: "yassinemalal@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 2,
-    fullName: "Yassine Abouho",
-    email: "yassineabouho@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 3,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 4,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 5,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 6,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 7,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 8,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 9,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 10,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-  {
-    id: 11,
-    fullName: "Hamza Folan",
-    email: "hamzafolan@gmail.com",
-    phone: "+212 655146069",
-    subject: "Leur structure est définie par un plan de numérotation propre à",
-  },
-];
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState(mockContacts);
+  const [contacts, setContacts] = useState([]);
   const [filter, setFilter] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Responsive hook
   const [width, setWidth] = useState(window.innerWidth);
   const isMobile = width <= 768;
+
+  // Récupération des contacts depuis l'API backend
+  useEffect(() => {
+    fetch("http://localhost/SFE-Project/backend/public/api/contact", {
+      method: "GET",
+      credentials: "include"
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error === "Non authentifié") {
+          window.location.href = "/login";
+        } else {
+          setContacts(Array.isArray(data) ? data : []);
+        }
+      })
+      .catch(() => setContacts([]));
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setWidth(window.innerWidth);
@@ -107,10 +46,27 @@ export default function ContactsPage() {
   }, []);
 
   const filtered = contacts.filter(c =>
-    c.fullName.toLowerCase().includes(filter.toLowerCase())
+    (c.nom_prenom || "").toLowerCase().includes(filter.toLowerCase())
   );
 
-  const handleDelete = id => setContacts(cs => cs.filter(c => c.id !== id));
+  const handleDelete = id_contact => {
+    const confirmDelete = window.confirm("Voulez-vous vraiment supprimer ce contact ?");
+    if (!confirmDelete) return;
+    console.log("Deleting contact with ID:", id_contact);
+    fetch(`http://localhost/SFE-Project/backend/public/api/contact?id_contact=${id_contact}`, {
+      credentials: "include",
+      method: "DELETE",
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setContacts(cs => cs.filter(c => c.id_contact !== id_contact));
+        } else {
+          alert(data.error || "Erreur lors de la suppression");
+        }
+      })
+      .catch(() => alert("Erreur lors de la suppression"));
+  };
   const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
 
   // Dynamic styles
@@ -164,33 +120,8 @@ export default function ContactsPage() {
               style={styles.searchIcon}
             />
           </div>
+          <Header/>
 
-          {/* User menu */}
-          <div className="user-menu" style={userMenuStyle}>
-            <img
-              src="/images/image.png"
-              alt="User Avatar"
-              style={styles.userAvatar}
-            />
-            <span style={styles.userEmail}>admin1@gmail.com</span>
-            <span style={styles.dropdownIcon} onClick={toggleDropdown}>
-              <img
-                src="/icons/arrow-down.png"
-                alt="arrow down"
-                style={styles.arrowDownIcon}
-              />
-            </span>
-            {isDropdownOpen && (
-              <div style={styles.dropdownMenu}>
-                <button
-                  style={styles.logoutButton}
-                  onClick={() => alert("Logged Out!")}
-                >
-                  Log Out
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Table / Cards */}
@@ -215,7 +146,7 @@ function ContactsList({ contacts, onDelete, isMobile }) {
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
         {contacts.map(c => (
           <div
-            key={c.id}
+            key={c.id_contact}
             style={{
               background: "#f9f9f9",
               padding: "1rem",
@@ -223,13 +154,13 @@ function ContactsList({ contacts, onDelete, isMobile }) {
               boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
             }}
           >
-            <p><strong>Nom :</strong> {c.fullName}</p>
-            <p><strong>Email :</strong> {c.email}</p>
-            <p><strong>Téléphone :</strong> {c.phone}</p>
-            <p><strong>Sujet :</strong> {c.subject}</p>
+            <p><strong>Nom :</strong> {c.nom_prenom}</p>
+            <p><strong>adresse_email :</strong> {c.adresse_email}</p>
+            <p><strong>Télételephone :</strong> {c.telephone}</p>
+            <p><strong>Sujet :</strong> {c.sujet}</p>
             <button
               style={styles.deleteBtn}
-              onClick={() => onDelete(c.id)}
+              onClick={() => onDelete(c.id_contact)}
             >
               <img src="icons/trash.svg" alt="Supprimer" width={24} />
             </button>
@@ -244,22 +175,22 @@ function ContactsList({ contacts, onDelete, isMobile }) {
     <table style={styles.table}>
       <thead>
         <tr>
-          {["Nom complet","E‑mail","N° Téléphone","Sujet","Action"].map((h,i)=>(
+          {["Nom complet","E‑mail","N° Télételephone","Sujet","Action"].map((h,i)=>(
             <th key={i} style={styles.thtdHeader}>{h}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {contacts.map(c => (
-          <tr key={c.id} style={styles.row}>
-            <td style={styles.thtd}>{c.fullName}</td>
-            <td style={styles.thtd}>{c.email}</td>
-            <td style={styles.thtd}>{c.phone}</td>
-            <td style={styles.thtd}>{c.subject}</td>
+          <tr key={c.id_contact} style={styles.row}>
+            <td style={styles.thtd}>{c.nom_prenom}</td>
+            <td style={styles.thtd}>{c.adresse_email}</td>
+            <td style={styles.thtd}>{c.telephone}</td>
+            <td style={styles.thtd}>{c.sujet}</td>
             <td style={styles.thtd}>
               <button
                 style={styles.deleteBtn}
-                onClick={() => onDelete(c.id)}
+                onClick={() => onDelete(c.id_contact)}
               >
                 <img src="icons/trash.svg" alt="Supprimer" width={30} />
               </button>
@@ -302,7 +233,7 @@ const styles = {
     width: 40, height: 40, borderRadius: "50%", marginRight: 10,
     background: "#e0e0e0",
   },
-  userEmail: {
+  useradresse_email: {
     fontSize: "1rem", fontWeight: "bold", color: "#333", marginRight: 6,
   },
   dropdownIcon: { cursor: "pointer" },

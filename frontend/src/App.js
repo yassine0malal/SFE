@@ -10,6 +10,8 @@ import Contact from './pages/admin/ContactsPage';
 import ServiceFormPage from './pages/admin/ServiceFormPage';
 import PublicationsForm from './pages/admin/PublicationFormPage';
 import SendMessagePage from "./pages/admin/SendMessage";
+import Login from './pages/admin/Login';
+import ServiceEditPage from './pages/admin/ServiceAjouterPage';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -18,6 +20,16 @@ const router = createBrowserRouter([
         <AdminNavbar />
         <div style={{ flex: 1, padding: '1rem' }}>
           <Accueil />
+        </div>
+      </div>  
+    ),
+  },
+  {
+    path: '/login',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <Login />
         </div>
       </div>  
     ),
@@ -56,7 +68,7 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/services/ajouter',
+    path: '/services/editer/:id',
     element: (
       <div style={{ display: 'flex' }}>
         <AdminNavbar />
@@ -67,7 +79,18 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/publications/ajouter',
+    path: '/services/ajouter',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <ServiceEditPage />
+        </div>
+      </div>
+    ),
+  },
+  {
+    path: '/publications/editer/:id',
     element: (
       <div style={{ display: 'flex' }}>
         <AdminNavbar />

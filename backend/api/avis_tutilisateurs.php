@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/AvisUtilisateurModel.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/auth.php';
+requireAdminAuth();
 
 $model = new AvisUtilisateurModel();
 $method = $_SERVER['REQUEST_METHOD'];

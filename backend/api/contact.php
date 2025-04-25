@@ -1,6 +1,8 @@
 <?php
+require_once __DIR__ . '/../includes/auth.php';
+requireAdminAuth();
+
 require_once __DIR__ . '/../models/ContactModel.php';
-header('Content-Type: application/json');
 
 $model = new ContactModel();
 $method = $_SERVER['REQUEST_METHOD'];

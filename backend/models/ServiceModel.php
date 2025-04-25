@@ -15,21 +15,26 @@ class ServiceModel {
         return $this->db->selectOne("SELECT * FROM services WHERE service_id = ?", [$service_id]);
     }
 
-    public function create($nom_service, $description, $image) {
+    public function create($nom_service, $description,$details,$is_active, $image) {
         return $this->db->insert('services', [
             'nom_service' => $nom_service,
             'description' => $description,
+            'details'=>$details,
+            'is_active' => $is_active,
             'image' => $image
         ]);
     }
 
-    public function update($service_id, $nom_service, $description, $image) {
+    public function update($service_id, $nom_service, $description,$is_active,$details, $image) {
         return $this->db->update(
             'services',
             [
                 'nom_service' => $nom_service,
                 'description' => $description,
-                'image' => $image
+                'image' => $image,
+                'details' => $details,
+                'is_active' => $is_active
+
             ],
             'service_id = ?',
             [$service_id]

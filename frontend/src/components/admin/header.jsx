@@ -1,4 +1,5 @@
 import React,{ useState, useEffect }from "react";
+import { useNavigate }from "react-router-dom";
 export default function Header(){
 
 
@@ -6,6 +7,8 @@ export default function Header(){
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
       const toggleDropdown = () => setIsDropdownOpen(prev => !prev);
       const closeDropdown = () => setIsDropdownOpen(false);
+      const navigate = useNavigate(); // Utilisé pour la redirection
+
     
       // Responsive
       const [width, setWidth] = useState(window.innerWidth);
@@ -103,14 +106,22 @@ export default function Header(){
         {isDropdownOpen && (
           <div style={styles.dropdownMenu}>
             <button
-              style={styles.logoutButton}
-              onClick={() => alert("Logged Out!")}
-            >
-              Log Out
-            </button>
+  style={styles.logoutButton}
+  onClick={() => {
+    fetch("http://localhost/SFE-Project/backend/public/api/logout", {
+      credentials: "include"
+    })
+      .then(res => res.json())
+      .then(() => {
+        window.location.href = "/login";
+      })
+      .catch(() => alert("Erreur de déconnexion"));
+  }}
+>
+  Log Out
+</button>
           </div>
         )}
       </div>
       );
 }
-

@@ -1,5 +1,7 @@
 <?php
-// Inclure la configuration CORS pour autoriser le frontend
+// ini_set('display_errors', 1);
+// ini_set('display_startup_errors', 1);
+// error_reporting(E_ALL);
 require_once __DIR__ . '/../config/cors.php';
 
 // Routage simple selon l'URL demandée
@@ -17,13 +19,14 @@ $routes = [
     '/api/projects_requests' => __DIR__ . '/../api/projects_requests.php',
     '/api/publications' => __DIR__ . '/../api/publications.php',
     '/api/services' => __DIR__ . '/../api/services.php',
+    '/api/login' => __DIR__ . '/../api/login.php',
+    '/api/logout' => __DIR__ . '/../api/logout.php',
+    '/api/uploads' => __DIR__ . '/../api/uploads.php',
 ];
 
 // Redirige vers le bon fichier API si la route existe
 if (isset($routes[$apiPath])) {
     require $routes[$apiPath];
-// } else {
-    // echo json_encode(['error' => 'Endpoint non trouvé dans isset']);
     exit;
 }
 

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/AbonneeModel.php';
-header('Content-Type: application/json');
+require_once __DIR__ . '/../includes/auth.php';
+requireAdminAuth();
 
 $model = new AbonneeModel();
 $method = $_SERVER['REQUEST_METHOD'];

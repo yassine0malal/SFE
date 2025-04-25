@@ -40,4 +40,8 @@ class AdminModel {
     public function delete($id_admin) {
         return $this->db->delete('admins', 'id_admin = ?', [$id_admin]);
     }
+    public function getByEmail($email) {
+        $sql = "SELECT * FROM admins WHERE email = ?";
+        return $this->db->selectOne($sql, [$email]);
+    }
 }
