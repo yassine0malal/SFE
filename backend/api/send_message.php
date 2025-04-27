@@ -7,6 +7,9 @@ requireAdminAuth();
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use Twilio\Rest\Client; // <-- Fix namespace
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
 
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -65,51 +68,6 @@ if ($type === "email" && !empty($data['emails'])) {
     exit;
 }
 
-// if ($type === "whatsapp" && !empty($data['phones'])) {
-//     $success = true;
-//     $errors = [];
-//     $sentNumbers = [];
-
-//     // Configuration Twilio
-//     $twilioAccountSid = 'AC3d0a348b6f7f60f282a7e789bc69cb68'; // Remplacez par vos infos
-//     $twilioAuthToken = '1f840e5430791107ff708d902290075d'; // Remplacez par vos infos
-//     $twilio = new Client($twilioAccountSid, $twilioAuthToken);
-
-//     foreach ($data['phones'] as $phone) {
-//         try {
-//             // Nettoyer le numéro
-//             $phone = preg_replace('/[^0-9]/', '', $phone);
-            
-//             // Ajouter le code pays si manquant (pour Maroc)
-//             if (substr($phone, 0, 3) !== '212') {
-//                 $phone = '212' . ltrim($phone, '0');
-//             }
-//             $phone = '+'.$phone;
-
-//             // Envoyer via Twilio
-//             $message = $twilio->messages->create(
-//                 "whatsapp:$phone",
-//                 [
-//                     'from' => 'whatsapp:+14155238886', // Numéro sandbox Twilio
-//                     'body' => $message
-//                 ]
-//             );
-
-//             $sentNumbers[] = $phone;
-//         } catch (Exception $e) {
-//             $success = false;
-//             $errors[] = "Erreur pour $phone: " . $e->getMessage();
-//         }
-//     }
-
-//     echo json_encode([
-//         'success' => $success,
-//         'sent_to' => $sentNumbers,
-//         'errors' => $errors
-//     ]);
-//     exit;
-// }
-
 
 if ($type === "whatsapp" && !empty($data['phones'])) {
     $success = true;
@@ -117,8 +75,8 @@ if ($type === "whatsapp" && !empty($data['phones'])) {
     $sentNumbers = [];
 
     // Configuration Twilio
-    $twilioAccountSid = 'AC3d0a348b6f7f60f282a7e789bc69cb68';
-    $twilioAuthToken = '1f840e5430791107ff708d902290075d';
+    $twilioAccountSid = $_ENV['TWILIO_ACCOUNT_SID'];
+    $twilioAuthToken = $_ENV['TWILIO_AUTH_TOKEN'];
     $twilio = new Client($twilioAccountSid, $twilioAuthToken);
 
     foreach ($data['phones'] as $originalPhone) {
