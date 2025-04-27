@@ -1,500 +1,878 @@
-// import React, { useRef, useState } from "react";
+
+// import React, { useState, useEffect, useRef } from "react";
+// import { useParams, useNavigate } from "react-router-dom";
 // import HeaderPart from "../../components/admin/header";
 
+// const API_URL = "http://localhost/SFE-Project/backend/public/api/publications";
+
 // export default function PublicationFormPage() {
-//   const [iconPreview, setIconPreview] = useState(null);
-//   const [form, setForm] = useState({
-//     nom: "",
-//     description: "",
-//     client: "",
-//     categorie: "",
-//     icon: null,
-//   });
-//   const [errors, setErrors] = useState({});
+//   const { id } = useParams();
+//   const navigate = useNavigate();
 //   const fileInputRef = useRef();
 
-//   const isMobile = window.innerWidth < 600;
+//   const [formData, setFormData] = useState({
+//     title: "",
+//     description: "",
+//     client: "",
+//     site: "",
+//     images: [],
+//   });
+//   const [imagePreviews, setImagePreviews] = useState([]);
+//   const [loading, setLoading] = useState(!!id);
+//   const [error, setError] = useState(null);
+//   const [errors, setErrors] = useState({});
+//   const [existingImages, setExistingImages] = useState([]); // URLs or names from DB
 
-//   function handleInputChange(e) {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//     setErrors({ ...errors, [e.target.name]: "" });
-//   }
+//   // Charger les données si modification
+//   useEffect(() => {
+//     if (!id) return;
+//     setLoading(true);
+//     fetch(`${API_URL}?id_publication=${id}`, { credentials: "include" })
+//       .then(res => res.json())
+//       .then(data => {
+//         if (data.error) throw new Error(data.error);
+//         setFormData({
+//           title: data.title || "",
+//           description: data.description || "",
+//           client: data.client || "",
+//           site: data.site || "",
+//           images: [],
+//         });
+//         if (data.images && Array.isArray(data.images)) {
+//           setExistingImages(data.images.map(img =>
+//             img.replace('/images/', '') // store only the filename
+//           ));
+//           setImagePreviews(
+//             data.images.map(img =>
+//               img.startsWith("http")
+//                 ? img
+//                 : `http://localhost/SFE-Project/backend/public/uploads${img}`
+//             )
+//           );
+//         }
+//       })
+//       .catch(err => setError(err.message))
+//       .finally(() => setLoading(false));
+//   }, [id]);
 
-//   function handleFileChange(e) {
-//     const file = e.target.files[0];
-//     setForm({ ...form, icon: file });
-//     setErrors({ ...errors, icon: "" });
-//     if (file) {
-//       const reader = new FileReader();
-//       reader.onload = (ev) => setIconPreview(ev.target.result);
-//       reader.readAsDataURL(file);
-//     }
-//   }
+//   // Gestion des champs texte
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name]: value }));
+//     setErrors(prev => ({ ...prev, [name]: "" }));
+//   };
 
-//   function handleDrop(e) {
+//   // Gestion des fichiers images
+//   const handleFileChange = (e) => {
+//     const files = Array.from(e.target.files);
+//     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+//     setErrors(prev => ({ ...prev, images: "" }));
+//     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+//   };
+
+//   // Drag & drop
+//   const handleDrop = (e) => {
 //     e.preventDefault();
-//     const file = e.dataTransfer.files[0];
-//     if (file) {
-//       setForm({ ...form, icon: file });
-//       setErrors({ ...errors, icon: "" });
-//       const reader = new FileReader();
-//       reader.onload = (ev) => setIconPreview(ev.target.result);
-//       reader.readAsDataURL(file);
-//     }
-//   }
+//     const files = Array.from(e.dataTransfer.files);
+//     setFormData(prev => ({ ...prev, images: files }));
+//     setErrors(prev => ({ ...prev, images: "" }));
+//     setImagePreviews(files.map(file => URL.createObjectURL(file)));
+//   };
+//   const handleDragOver = (e) => e.preventDefault();
 
-//   function handleDragOver(e) {
-//     e.preventDefault();
-//   }
-
-//   function handleUploadClick() {
+//   // Ouvrir le sélecteur de fichiers
+//   const handleUploadClick = () => {
+//     fileInputRef.current.value = "";
 //     fileInputRef.current.click();
-//   }
+//   };
 
-//   function handleSubmit(e) {
+//   // Validation et soumission
+//   // const handleSubmit = async (e) => {
+//   //   e.preventDefault();
+//   //   let newErrors = {};
+//   //   if (!formData.title.trim()) newErrors.title = "Titre requis";
+//   //   if (!formData.description.trim()) newErrors.description = "Description requise";
+//   //   if (!formData.client.trim()) newErrors.client = "Client requis";
+//   //   if (!formData.site.trim()) newErrors.site = "Site requis";
+//   //   if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
+//   //   setErrors(newErrors);
+//   //   if (Object.keys(newErrors).length > 0) return;
+  
+//   //   const formDataToSend = new FormData();
+//   //   if (id) formDataToSend.append("id_publication", id);
+//   //   formDataToSend.append("title", formData.title);
+//   //   formDataToSend.append("description", formData.description);
+//   //   formDataToSend.append("client", formData.client);
+//   //   formDataToSend.append("site", formData.site);
+  
+//   //   // Append each file as images[]
+//   //   if (formData.images && formData.images.length > 0) {
+//   //     formData.images.forEach(img => formDataToSend.append("images[]", img));
+//   //      }
+  
+//   //   try {
+//   //     setLoading(true);
+//   //     const response = await fetch(API_URL, {
+//   //       method: "POST",
+//   //       credentials: "include",
+//   //       body: formDataToSend,
+//   //     });
+//   //     const result = await response.json();
+//   //     if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
+//   //     alert(id ? "Publication modifiée !" : "Publication créée !");
+//   //     navigate("/publications");
+//   //   } catch (err) {
+//   //     setError(err.message);
+//   //   } finally {
+//   //     setLoading(false);
+//   //   }
+//   // };
+
+//   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     let newErrors = {};
-//     if (!form.nom.trim()) newErrors.nom = "Nom de publication requis";
-//     if (!form.description.trim()) newErrors.description = "Description requise";
-//     if (!form.client.trim()) newErrors.client = "Détails du client requis";
-//     if (!form.categorie.trim()) newErrors.categorie = "Catégorie requise";
-//     if (!form.icon) newErrors.icon = "Image requise";
+//     if (!formData.title.trim()) newErrors.title = "Titre requis";
+//     if (!formData.description.trim()) newErrors.description = "Description requise";
+//     if (!formData.client.trim()) newErrors.client = "Client requis";
+//     if (!formData.site.trim()) newErrors.site = "Site requis";
+//     if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
 //     setErrors(newErrors);
 //     if (Object.keys(newErrors).length > 0) return;
-//     alert("Publication enregistrée !");
+  
+//     const formDataToSend = new FormData();
+//     if (id) formDataToSend.append("id_publication", id);
+//     formDataToSend.append("title", formData.title);
+//     formDataToSend.append("description", formData.description);
+//     formDataToSend.append("client", formData.client);
+//     formDataToSend.append("site", formData.site);
+  
+//     // Send existing image names as a comma-separated string
+//     if (existingImages.length > 0) {
+//       formDataToSend.append("existing_images", existingImages.join(","));
+//     }
+  
+//     // Append each new file as images[]
+//     if (formData.images && formData.images.length > 0) {
+//       formData.images.forEach(img => formDataToSend.append("images[]", img));
+//     }
+  
+//     try {
+//       setLoading(true);
+//       const response = await fetch(API_URL, {
+//         method: "POST",
+//         credentials: "include",
+//         body: formDataToSend,
+//       });
+//       const result = await response.json();
+//       if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
+//       alert(id ? "Publication modifiée !" : "Publication créée !");
+//       navigate("/publications");
+//     } catch (err) {
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div style={styles.container}>
+//         <HeaderPart />
+//         <div style={styles.loadingMessage}>Chargement...</div>
+//       </div>
+//     );
 //   }
 
 //   return (
-//     <div
-//       style={{
-//         flex: 1,
-//         padding: isMobile ? "1rem 0.5rem" : "2rem",
-//         position: "relative",
-//         background: "#fff",
-//         minHeight: "100vh",
-//       }}
-//     >
+//     <div style={styles.container}>
 //       <HeaderPart />
-//       <form
-//         onSubmit={handleSubmit}
-//         style={{
-//           maxWidth: 500,
-//           width: "100%",
-//           margin: isMobile ? "30px auto 0 auto" : "60px auto 0 auto",
-//           display: "flex",
-//           flexDirection: "column",
-//           gap: "1.5rem",
-//           alignItems: "center",
-//         }}
-//         noValidate
-//       >
-//         <div style={{ width: "100%" }}>
-//           <h4 style={{ color: "#FF5C78", fontSize: "27px", textAlign: "center" }}>
-//             Ajouter une publication
-//           </h4>
-//           <input
-//             name="nom"
-//             placeholder="Nom de publication"
-//             value={form.nom}
-//             onChange={handleInputChange}
-//             style={inputStyle}
-//             required
-//           />
-//           {errors.nom && <div style={errorStyle}>{errors.nom}</div>}
-//         </div>
-//         <div style={{ width: "100%" }}>
-//           <textarea
-//             name="description"
-//             placeholder="Description de publication"
-//             value={form.description}
-//             onChange={handleInputChange}
-//             style={inputStyle}
-//             rows={2}
-//             required
-//           />
-//           {errors.description && <div style={errorStyle}>{errors.description}</div>}
-//         </div>
-//         <div style={{ width: "100%" }}>
-//           <input
-//             name="client"
-//             placeholder="Détails du client"
-//             value={form.client}
-//             onChange={handleInputChange}
-//             style={inputStyle}
-//             required
-//           />
-//           {errors.client && <div style={errorStyle}>{errors.client}</div>}
-//         </div>
-//         <div style={{ width: "100%" }}>
-//           <input
-//             name="categorie"
-//             placeholder="Catégorie de projet"
-//             value={form.categorie}
-//             onChange={handleInputChange}
-//             style={inputStyle}
-//             required
-//           />
-//           {errors.categorie && <div style={errorStyle}>{errors.categorie}</div>}
-//         </div>
-//         {/* Zone d'upload */}
-//         <div
-//           style={{
-//             ...uploadBoxStyle,
-//             width: isMobile ? "100%" : 500,
-//             minWidth: isMobile ? 0 : 300,
-//             height: isMobile ? 120 : 170,
-//             border: "2px dashed #FF5C78",
-//           }}
-//           onClick={handleUploadClick}
-//           onDrop={handleDrop}
-//           onDragOver={handleDragOver}
-//         >
-//           {iconPreview ? (
-//             <img
-//               src={iconPreview}
-//               alt="Aperçu"
-//               style={{ width: 80, height: 80, objectFit: "contain" }}
+//       <div style={styles.formContainer}>
+//         <h1 style={styles.title}>{id ? "Modifier la publication" : "Ajouter une publication"}</h1>
+//         {error && <div style={styles.errorMessage}>{error}</div>}
+//         <form onSubmit={handleSubmit} style={styles.form} noValidate>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Titre</label>
+//             <input
+//               type="text"
+//               name="title"
+//               value={formData.title}
+//               onChange={handleChange}
+//               style={styles.input}
+//               required
 //             />
-//           ) : (
-//             <>
+//             {errors.title && <div style={styles.errorMessage}>{errors.title}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Description</label>
+//             <textarea
+//               name="description"
+//               value={formData.description}
+//               onChange={handleChange}
+//               style={styles.textarea}
+//               required
+//             />
+//             {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Client</label>
+//             <input
+//               type="text"
+//               name="client"
+//               value={formData.client}
+//               onChange={handleChange}
+//               style={styles.input}
+//               required
+//             />
+//             {errors.client && <div style={styles.errorMessage}>{errors.client}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Site web</label>
+//             <input
+//               type="url"
+//               name="site"
+//               value={formData.site}
+//               onChange={handleChange}
+//               style={styles.input}
+//               required
+//             />
+//             {errors.site && <div style={styles.errorMessage}>{errors.site}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Images</label>
+//             <div
+//               style={styles.uploadBox}
+//               onClick={handleUploadClick}
+//               onDrop={handleDrop}
+//               onDragOver={handleDragOver}
+//             >
 //               <img
 //                 src="/images/cloud_upload.png"
 //                 alt="Upload"
 //                 style={{ width: 60, height: 60, marginBottom: 10 }}
 //               />
-//               <div style={{ color: "#333", fontWeight: "bold", fontSize: isMobile ? 13 : 16 }}>
+//               <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
 //                 Drag & Drop pour télécharger<br />
 //                 <span style={{ color: "#FF4757" }}>ou naviguer</span>
 //               </div>
 //               <div style={{ fontSize: 12, color: "#888" }}>
 //                 JPEG, JPG, PNG.
 //               </div>
-//             </>
-//           )}
-//           <input
-//             ref={fileInputRef}
-//             type="file"
-//             accept="image/*"
-//             style={{ display: "none" }}
-//             onChange={handleFileChange}
-//           />
-//         </div>
-//         {errors.icon && <div style={errorStyle}>{errors.icon}</div>}
-
-//         <button type="submit" style={submitBtnStyle}>
-//           Enregistrer
-//         </button>
-//       </form>
+//               <input
+//                 ref={fileInputRef}
+//                 type="file"
+//                 name="images"
+//                 accept="image/*"
+//                 multiple
+//                 style={{ display: "none" }}
+//                 onChange={handleFileChange}
+//               />
+//             </div>
+//             {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
+//             {imagePreviews.length > 0 && (
+//               <div style={styles.imagePreviewContainer}>
+//                 {imagePreviews.map((src, idx) => (
+//                   <img
+//                     key={idx}
+//                     src={src}
+//                     alt={`Aperçu ${idx + 1}`}
+//                     style={styles.imagePreview}
+//                   />
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+//           <div style={styles.buttonGroup}>
+//             <button
+//               type="button"
+//               onClick={() => navigate("/publications")}
+//               style={styles.cancelButton}
+//             >
+//               Annuler
+//             </button>
+//             <button type="submit" style={styles.submitButton}>
+//               {id ? "Mettre à jour" : "Enregistrer"}
+//             </button>
+//           </div>
+//         </form>
+//       </div>
 //     </div>
 //   );
 // }
 
-// const inputStyle = {
-//   width: "100%",
-//   padding: "1rem",
-//   borderRadius: 12,
-//   border: "none",
-//   background: "#D9D9D9",
-//   fontSize: 18,
-//   outline: "none",
-//   boxSizing: "border-box",
-//   marginBottom: 0,
+// const styles = {
+//   container: {
+//     width: "100%",
+//     minHeight: "100vh",
+//     backgroundColor: "#f5f5f5",
+//     padding: "20px",
+//     boxSizing: "border-box",
+//   },
+//   formContainer: {
+//     maxWidth: "800px",
+//     margin: "40px auto",
+//     padding: "30px",
+//     backgroundColor: "#fff",
+//     borderRadius: "8px",
+//     boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+//   },
+//   title: {
+//     fontSize: "24px",
+//     color: "#333",
+//     marginBottom: "30px",
+//     textAlign: "center",
+//   },
+//   form: {
+//     display: "flex",
+//     flexDirection: "column",
+//     gap: "20px",
+//   },
+//   formGroup: {
+//     display: "flex",
+//     flexDirection: "column",
+//     gap: "8px",
+//   },
+//   label: {
+//     fontSize: "16px",
+//     fontWeight: "bold",
+//     color: "#555",
+//   },
+//   input: {
+//     padding: "12px",
+//     borderRadius: "4px",
+//     border: "1px solid #ddd",
+//     fontSize: "16px",
+//   },
+//   textarea: {
+//     padding: "12px",
+//     borderRadius: "4px",
+//     border: "1px solid #ddd",
+//     fontSize: "16px",
+//     minHeight: "100px",
+//     resize: "vertical",
+//   },
+//   uploadBox: {
+//     border: "2px dashed #FF5C78",
+//     borderRadius: 16,
+//     background: "#fff",
+//     display: "flex",
+//     flexDirection: "column",
+//     alignItems: "center",
+//     justifyContent: "center",
+//     cursor: "pointer",
+//     marginBottom: 10,
+//     textAlign: "center",
+//     transition: "border 0.2s",
+//     width: "100%",
+//     minHeight: 120,
+//   },
+//   imagePreviewContainer: {
+//     display: "flex",
+//     gap: "10px",
+//     flexWrap: "wrap",
+//     marginTop: "10px",
+//   },
+//   imagePreview: {
+//     width: "100px",
+//     height: "100px",
+//     objectFit: "cover",
+//     borderRadius: "4px",
+//     border: "1px solid #ddd",
+//   },
+//   buttonGroup: {
+//     display: "flex",
+//     justifyContent: "space-between",
+//     marginTop: "20px",
+//   },
+//   cancelButton: {
+//     padding: "12px 24px",
+//     backgroundColor: "#e0e0e0",
+//     color: "#333",
+//     border: "none",
+//     borderRadius: "4px",
+//     fontSize: "16px",
+//     cursor: "pointer",
+//     transition: "background-color 0.3s",
+//   },
+//   submitButton: {
+//     padding: "12px 24px",
+//     backgroundColor: "#FF5C78",
+//     color: "white",
+//     border: "none",
+//     borderRadius: "4px",
+//     fontSize: "16px",
+//     fontWeight: "bold",
+//     cursor: "pointer",
+//     transition: "background-color 0.3s",
+//   },
+//   loadingMessage: {
+//     textAlign: "center",
+//     marginTop: "100px",
+//     fontSize: "18px",
+//     color: "#666",
+//   },
+//   errorMessage: {
+//     backgroundColor: "#ffebee",
+//     color: "#c62828",
+//     padding: "10px",
+//     borderRadius: "4px",
+//     marginBottom: "10px",
+//     fontSize: "15px",
+//   },
 // };
 
-// const uploadBoxStyle = {
-//   border: "2px dashed #FF5C78",
-//   borderRadius: 16,
-//   background: "#fff",
-//   display: "flex",
-//   flexDirection: "column",
-//   alignItems: "center",
-//   justifyContent: "center",
-//   cursor: "pointer",
-//   marginBottom: 10,
-//   textAlign: "center",
-//   transition: "border 0.2s",
-// };
-
-// const submitBtnStyle = {
-//   width: "100%",
-//   padding: "1.2rem",
-//   background: "#FF5C78",
-//   color: "#fff",
-//   fontWeight: "bold",
-//   fontSize: "2rem",
-//   border: "none",
-//   borderRadius: 12,
-//   cursor: "pointer",
-//   marginTop: 10,
-//   letterSpacing: 2,
-// };
-
-// const errorStyle = {
-//   color: "#FF4757",
-//   fontSize: 14,
-//   marginTop: 4,
-//   marginLeft: 4,
-//   textAlign: "left",
-// };
 
 
 
 
 
-import React, { useRef, useState } from "react";
+
+
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import HeaderPart from "../../components/admin/header";
+import { FaTimes } from "react-icons/fa";
+
+const API_URL = "http://localhost/SFE-Project/backend/public/api/publications";
 
 export default function PublicationFormPage() {
-  const [imagePreviews, setImagePreviews] = useState([]);
-  const [form, setForm] = useState({
-    nom: "",
-    description: "",
-    client: "",
-    categorie: "",
-    images: [],
-  });
-  const [errors, setErrors] = useState({});
+  const { id } = useParams();
+  const navigate = useNavigate();
   const fileInputRef = useRef();
 
-  const isMobile = window.innerWidth < 600;
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    client: "",
+    site: "",
+    images: [],
+  });
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [loading, setLoading] = useState(!!id);
+  const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [existingImages, setExistingImages] = useState([]); // filenames only
 
-  function handleInputChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
-  }
+  // Load data if editing
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetch(`${API_URL}?id_publication=${id}`, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setFormData({
+          title: data.title || "",
+          description: data.description || "",
+          client: data.client || "",
+          site: data.site || "",
+          images: [],
+        });
+        if (data.images && Array.isArray(data.images)) {
+          setExistingImages(data.images.map(img =>
+            img.replace('/images/', '')
+          ));
+          setImagePreviews(
+            data.images.map(img =>
+              img.startsWith("http")
+                ? img
+                : `http://localhost/SFE-Project/backend/public/uploads${img}`
+            )
+          );
+        }
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
 
-  function handleFileChange(e) {
+  // Text fields
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setErrors(prev => ({ ...prev, [name]: "" }));
+  };
+
+  // File selection
+  const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    // Ajoute les nouvelles images à celles déjà présentes
-    const newImages = [...form.images, ...files];
-    setForm({ ...form, images: newImages });
-    setErrors({ ...errors, images: "" });
+    setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+    setErrors(prev => ({ ...prev, images: "" }));
+    setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
 
-    // Génère les nouveaux aperçus
-    // const newPreviews = [];
-    files.forEach((file, idx) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setImagePreviews((prev) => [...prev, ev.target.result]);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
+  };
 
-  function handleDrop(e) {
+  // Drag & drop
+  const handleDrop = (e) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
-    const newImages = [...form.images, ...files];
-    setForm({ ...form, images: newImages });
-    setErrors({ ...errors, images: "" });
+    setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+    setErrors(prev => ({ ...prev, images: "" }));
+    setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+  };
+  const handleDragOver = (e) => e.preventDefault();
 
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setImagePreviews((prev) => [...prev, ev.target.result]);
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault();
-  }
-
-  function handleUploadClick() {
-    fileInputRef.current.value = ""; // reset to allow re-uploading same file
+  // Open file selector
+  const handleUploadClick = () => {
+    fileInputRef.current.value = "";
     fileInputRef.current.click();
-  }
+  };
 
-  function handleSubmit(e) {
+  // Remove an existing image (from DB)
+  const handleRemoveExistingImage = (idx) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== idx));
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // Remove a newly selected image (not yet uploaded)
+  const handleRemoveNewImage = (idx) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== idx)
+    }));
+    setImagePreviews(prev => {
+      const existingCount = existingImages.length;
+      return prev.filter((_, i) => i !== (existingCount + idx));
+    });
+  };
+
+  // Submit
+  const handleSubmit = async (e) => {
     e.preventDefault();
     let newErrors = {};
-    if (!form.nom.trim()) newErrors.nom = "Nom de publication requis";
-    if (!form.description.trim()) newErrors.description = "Description requise";
-    if (!form.client.trim()) newErrors.client = "Détails du client requis";
-    if (!form.categorie.trim()) newErrors.categorie = "Catégorie requise";
-    if (!form.images || form.images.length === 0) newErrors.images = "Au moins une image requise";
+    if (!formData.title.trim()) newErrors.title = "Titre requis";
+    if (!formData.description.trim()) newErrors.description = "Description requise";
+    if (!formData.client.trim()) newErrors.client = "Client requis";
+    if (!formData.site.trim()) newErrors.site = "Site requis";
+    if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-    alert("Publication enregistrée !");
+
+    const formDataToSend = new FormData();
+    if (id) formDataToSend.append("id_publication", id);
+    formDataToSend.append("title", formData.title);
+    formDataToSend.append("description", formData.description);
+    formDataToSend.append("client", formData.client);
+    formDataToSend.append("site", formData.site);
+
+    // Send existing image names as a comma-separated string
+    if (existingImages.length > 0) {
+      // alert(existingImages.join(","));
+      formDataToSend.append("existing_images", existingImages.join(","));
+    }
+// alert(formDataToSend['existing_images']);
+    // Append each new file as images[]
+    if (formData.images && formData.images.length > 0) {
+      formData.images.forEach(img => formDataToSend.append("images[]", img));
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(API_URL, {
+        method: "POST",
+        credentials: "include",
+        body: formDataToSend,
+      });
+      const result = await response.json();
+      if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
+      alert(id ? "Publication modifiée !" : "Publication créée !");
+      navigate("/publications");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <HeaderPart />
+        <div style={styles.loadingMessage}>Chargement...</div>
+      </div>
+    );
   }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        padding: isMobile ? "1rem 0.5rem" : "2rem",
-        position: "relative",
-        background: "#fff",
-        minHeight: "100vh",
-      }}
-    >
+    <div style={styles.container}>
       <HeaderPart />
-      <form
-        onSubmit={handleSubmit}
-        style={{
-          maxWidth: 500,
-          width: "100%",
-          margin: isMobile ? "30px auto 0 auto" : "60px auto 0 auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.5rem",
-          alignItems: "center",
-        }}
-        noValidate
-      >
-        <div style={{ width: "100%" }}>
-          <input
-            name="nom"
-            placeholder="Nom de publication"
-            value={form.nom}
-            onChange={handleInputChange}
-            style={inputStyle}
-            required
-          />
-          {errors.nom && <div style={errorStyle}>{errors.nom}</div>}
-        </div>
-        <div style={{ width: "100%" }}>
-          <textarea
-            name="description"
-            placeholder="Description de de publication"
-            value={form.description}
-            onChange={handleInputChange}
-            style={inputStyle}
-            rows={2}
-            required
-          />
-          {errors.description && <div style={errorStyle}>{errors.description}</div>}
-        </div>
-        <div style={{ width: "100%" }}>
-          <input
-            name="client"
-            placeholder="Détails du client"
-            value={form.client}
-            onChange={handleInputChange}
-            style={inputStyle}
-            required
-          />
-          {errors.client && <div style={errorStyle}>{errors.client}</div>}
-        </div>
-        <div style={{ width: "100%" }}>
-          <input
-            name="categorie"
-            placeholder="Catégorie de projet"
-            value={form.categorie}
-            onChange={handleInputChange}
-            style={inputStyle}
-            required
-          />
-          {errors.categorie && <div style={errorStyle}>{errors.categorie}</div>}
-        </div>
-
-        {/* Aperçu des images au-dessus de la zone d'upload */}
-        {imagePreviews.length > 0 && (
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginBottom: 10 }}>
-            {imagePreviews.map((src, idx) => (
+      <div style={styles.formContainer}>
+        <h1 style={styles.title}>{id ? "Modifier la publication" : "Ajouter une publication"}</h1>
+        {error && <div style={styles.errorMessage}>{error}</div>}
+        <form onSubmit={handleSubmit} style={styles.form} noValidate>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Titre</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+            {errors.title && <div style={styles.errorMessage}>{errors.title}</div>}
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              style={styles.textarea}
+              required
+            />
+            {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Client</label>
+            <input
+              type="text"
+              name="client"
+              value={formData.client}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+            {errors.client && <div style={styles.errorMessage}>{errors.client}</div>}
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Site web</label>
+            <input
+              type="url"
+              name="site"
+              value={formData.site}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+            {errors.site && <div style={styles.errorMessage}>{errors.site}</div>}
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Images</label>
+            <div
+              style={styles.uploadBox}
+              onClick={handleUploadClick}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
               <img
-                key={idx}
-                src={src}
-                alt={`Aperçu ${idx + 1}`}
-                style={{ width: 80, height: 80, objectFit: "contain", borderRadius: 8, border: "1px solid #eee" }}
+                src="/images/cloud_upload.png"
+                alt="Upload"
+                style={{ width: 60, height: 60, marginBottom: 10 }}
               />
-            ))}
+              <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+                Drag & Drop pour télécharger<br />
+                <span style={{ color: "#FF4757" }}>ou naviguer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                JPEG, JPG, PNG.
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="images"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+            </div>
+            {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
+            {(existingImages.length > 0 || formData.images.length > 0) && (
+              <div style={styles.imagePreviewContainer}>
+                {/* Existing images */}
+                {existingImages.map((img, idx) => (
+                  <div key={`existing-${idx}`} style={styles.previewWrapper}>
+                    <img
+                      src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
+                      alt={`Aperçu ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveExistingImage(idx);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+                {/* New images */}
+                {formData.images.map((file, idx) => (
+                  <div key={`new-${idx}`} style={styles.previewWrapper}>
+                    <img
+                      src={imagePreviews[existingImages.length + idx]}
+                      alt={`Aperçu nouveau ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveNewImage(idx);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-
-        {/* Zone d'upload */}
-        <div
-          style={{
-            ...uploadBoxStyle,
-            width: isMobile ? "100%" : 500,
-            minWidth: isMobile ? 0 : 300,
-            height: isMobile ? 120 : 170,
-            border: "2px dashed #FF5C78",
-            overflow: "auto",
-          }}
-          onClick={handleUploadClick}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
-          <img
-            src="/images/cloud_upload.png"
-            alt="Upload"
-            style={{ width: 60, height: 60, marginBottom: 10 }}
-          />
-          <div style={{ color: "#333", fontWeight: "bold", fontSize: isMobile ? 13 : 16 }}>
-            Drage & Drop pour télécharger<br />
-            <span style={{ color: "#FF4757" }}>ou naviguer</span>
+          <div style={styles.buttonGroup}>
+            <button
+              type="button"
+              onClick={() => navigate("/publications")}
+              style={styles.cancelButton}
+            >
+              Annuler
+            </button>
+            <button type="submit" style={styles.submitButton}>
+              {id ? "Mettre à jour" : "Enregistrer"}
+            </button>
           </div>
-          <div style={{ fontSize: 12, color: "#888" }}>
-            JPEG, JPG, PNG.
-          </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            multiple
-            style={{ display: "none" }}
-            onChange={handleFileChange}
-          />
-        </div>
-        {/* Bouton pour ajouter une autre image */}
-        
-        {errors.images && <div style={errorStyle}>{errors.images}</div>}
-
-        <button type="submit" style={submitBtnStyle}>
-          ENREGISTRER
-        </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
 
-const inputStyle = {
-  width: "100%",
-  padding: "1rem",
-  borderRadius: 12,
-  border: "none",
-  background: "#D9D9D9",
-  fontSize: 18,
-  outline: "none",
-  boxSizing: "border-box",
-  marginBottom: 0,
-};
-
-const uploadBoxStyle = {
-  border: "2px dashed #FF5C78",
-  borderRadius: 16,
-  background: "#fff",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  marginBottom: 10,
-  textAlign: "center",
-  transition: "border 0.2s",
-};
-
-const submitBtnStyle = {
-  width: "100%",
-  padding: "1.5rem",
-  background: "#FF5C78",
-  color: "#fff",
-  fontWeight: "bold",
-  fontSize: "2rem",
-  border: "none",
-  borderRadius: 12,
-  cursor: "pointer",
-  marginTop: 10,
-  letterSpacing: 3,
-  textTransform: "uppercase",
-};
-
-const errorStyle = {
-  color: "#FF4757",
-  fontSize: 14,
-  marginTop: 4,
-  marginLeft: 4,
-  textAlign: "left",
+const styles = {
+  container: {
+    width: "100%",
+    minHeight: "100vh",
+    backgroundColor: "#f5f5f5",
+    padding: "20px",
+    boxSizing: "border-box",
+  },
+  formContainer: {
+    maxWidth: "800px",
+    margin: "40px auto",
+    padding: "30px",
+    backgroundColor: "#fff",
+    borderRadius: "8px",
+    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
+  },
+  title: {
+    fontSize: "24px",
+    color: "#333",
+    marginBottom: "30px",
+    textAlign: "center",
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "20px",
+  },
+  formGroup: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+  label: {
+    fontSize: "16px",
+    fontWeight: "bold",
+    color: "#555",
+  },
+  input: {
+    padding: "12px",
+    borderRadius: "4px",
+    border: "1px solid #ddd",
+    fontSize: "16px",
+  },
+  textarea: {
+    padding: "12px",
+    borderRadius: "4px",
+    border: "1px solid #ddd",
+    fontSize: "16px",
+    minHeight: "100px",
+    resize: "vertical",
+  },
+  uploadBox: {
+    border: "2px dashed #FF5C78",
+    borderRadius: 16,
+    background: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    marginBottom: 10,
+    textAlign: "center",
+    transition: "border 0.2s",
+    width: "100%",
+    minHeight: 120,
+  },
+  imagePreviewContainer: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
+    marginTop: "10px",
+  },
+  previewWrapper: {
+    position: "relative",
+    display: "inline-block",
+  },
+  imagePreview: {
+    width: "100px",
+    height: "100px",
+    objectFit: "cover",
+    borderRadius: "4px",
+    border: "1px solid #ddd",
+  },
+  removeIcon: {
+    position: "absolute",
+    top: 2,
+    right: 2,
+    background: "#fff",
+    borderRadius: "50%",
+    color: "#FF5C78",
+    cursor: "pointer",
+    fontSize: 18,
+    padding: 2,
+    boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+    zIndex: 2,
+  },
+  buttonGroup: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginTop: "20px",
+  },
+  cancelButton: {
+    padding: "12px 24px",
+    backgroundColor: "#e0e0e0",
+    color: "#333",
+    border: "none",
+    borderRadius: "4px",
+    fontSize: "16px",
+    cursor: "pointer",
+    transition: "background-color 0.3s",
+  },
+  submitButton: {
+    padding: "12px 24px",
+    backgroundColor: "#FF5C78",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    fontSize: "16px",
+    fontWeight: "bold",
+    cursor: "pointer",
+    transition: "background-color 0.3s",
+  },
+  loadingMessage: {
+    textAlign: "center",
+    marginTop: "100px",
+    fontSize: "18px",
+    color: "#666",
+  },
+  errorMessage: {
+    backgroundColor: "#ffebee",
+    color: "#c62828",
+    padding: "10px",
+    borderRadius: "4px",
+    marginBottom: "10px",
+    fontSize: "15px",
+  },
 };
