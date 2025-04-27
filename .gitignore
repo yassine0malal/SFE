@@ -7,3 +7,5 @@ backend/.env
 # Backend
 vendor/
 .env
+composer.json
+composer.lock
