@@ -6,9 +6,9 @@ requireAdminAuth();
 // Charger PHPMailer (assure-toi d'avoir fait "composer require phpmailer/phpmailer")
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use Twilio\Rest\Client; // <-- Fix namespace
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
+// use Twilio\Rest\Client; // <-- Fix namespace
+// $dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
+// $dotenv->load();
 
 
 
@@ -69,58 +69,58 @@ if ($type === "email" && !empty($data['emails'])) {
 }
 
 
-if ($type === "whatsapp" && !empty($data['phones'])) {
-    $success = true;
-    $errors = [];
-    $sentNumbers = [];
+// if ($type === "whatsapp" && !empty($data['phones'])) {
+//     $success = true;
+//     $errors = [];
+//     $sentNumbers = [];
 
-    // Configuration Twilio
-    $twilioAccountSid = $_ENV['TWILIO_ACCOUNT_SID'];
-    $twilioAuthToken = $_ENV['TWILIO_AUTH_TOKEN'];
-    $twilio = new Client($twilioAccountSid, $twilioAuthToken);
+//     // Configuration Twilio
+//     $twilioAccountSid = $_ENV['TWILIO_ACCOUNT_SID'];
+//     $twilioAuthToken = $_ENV['TWILIO_AUTH_TOKEN'];
+//     $twilio = new Client($twilioAccountSid, $twilioAuthToken);
 
-    foreach ($data['phones'] as $originalPhone) {
-        try {
-            // 1. Clean the phone number (remove all non-numeric characters except '+')
-            $phone = preg_replace('/[^+\d]/', '', $originalPhone);
+//     foreach ($data['phones'] as $originalPhone) {
+//         try {
+//             // 1. Clean the phone number (remove all non-numeric characters except '+')
+//             $phone = preg_replace('/[^+\d]/', '', $originalPhone);
             
-            // 2. Ensure it starts with '+' and has valid country code
-            if (substr($phone, 0, 1) !== '+') {
-                throw new Exception("Numéro invalide: $originalPhone (manque le code pays)");
-            }
+//             // 2. Ensure it starts with '+' and has valid country code
+//             if (substr($phone, 0, 1) !== '+') {
+//                 throw new Exception("Numéro invalide: $originalPhone (manque le code pays)");
+//             }
 
-            // 3. Remove '+' for validation, then check minimum length
-            $cleanNumber = substr($phone, 1);
-            if (strlen($cleanNumber) < 8 || !ctype_digit($cleanNumber)) {
-                throw new Exception("Numéro invalide: $originalPhone");
-            }
+//             // 3. Remove '+' for validation, then check minimum length
+//             $cleanNumber = substr($phone, 1);
+//             if (strlen($cleanNumber) < 8 || !ctype_digit($cleanNumber)) {
+//                 throw new Exception("Numéro invalide: $originalPhone");
+//             }
 
-            // 4. Re-add '+' for final format
-            $phone = '+' . $cleanNumber;
+//             // 4. Re-add '+' for final format
+//             $phone = '+' . $cleanNumber;
 
-            // Envoyer via Twilio
-            $message = $twilio->messages->create(
-                "whatsapp:$phone",
-                [
-                    'from' => 'whatsapp:+14155238886',
-                    'body' => $message
-                ]
-            );
+//             // Envoyer via Twilio
+//             $message = $twilio->messages->create(
+//                 "whatsapp:$phone",
+//                 [
+//                     'from' => 'whatsapp:+14155238886',
+//                     'body' => $message
+//                 ]
+//             );
 
-            $sentNumbers[] = $phone;
-        } catch (Exception $e) {
-            $success = false;
-            $errors[] = "Erreur pour $originalPhone: " . $e->getMessage();
-        }
-    }
+//             $sentNumbers[] = $phone;
+//         } catch (Exception $e) {
+//             $success = false;
+//             $errors[] = "Erreur pour $originalPhone: " . $e->getMessage();
+//         }
+//     }
 
-    echo json_encode([
-        'success' => $success,
-        'sent_to' => $sentNumbers,
-        'errors' => $errors
-    ]);
-    exit;
-}
+//     echo json_encode([
+//         'success' => $success,
+//         'sent_to' => $sentNumbers,
+//         'errors' => $errors
+//     ]);
+//     exit;
+// }
 
 http_response_code(400);
 echo json_encode(['error' => 'Type non supporté ou liste vide']);
