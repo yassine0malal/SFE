@@ -281,8 +281,8 @@ const ServicesPage = () => {
                     <div style={{ fontSize: "30px" }}>
                       <img
                         src={`http://localhost/SFE-Project/backend/public/uploads/images/${service.image}`}
-                        width={80}
-                        height={80}
+                        width={120}
+                        height={120}
                         alt={service.nom_service}
                         style={{
                           maxWidth: '100%',

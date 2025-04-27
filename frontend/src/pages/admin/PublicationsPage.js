@@ -594,7 +594,7 @@ export default function PublicationsPage() {
       <div style={topBarStyle}>
         <button
           style={addBtnStyle}
-          onClick={() => navigate(`/publications/editer/${publication.id_publication}`)}
+          onClick={() => navigate(`/publications/ajouter`)}
         >
           Ajouter +
         </button>

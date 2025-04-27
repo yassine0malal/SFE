@@ -12,6 +12,7 @@ import PublicationsForm from './pages/admin/PublicationFormPage';
 import SendMessagePage from "./pages/admin/SendMessage";
 import Login from './pages/admin/Login';
 import ServiceEditPage from './pages/admin/ServiceAjouterPage';
+import PublicationAddPage from './pages/admin/PublicationAjouterPage';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -85,6 +86,17 @@ const router = createBrowserRouter([
         <AdminNavbar />
         <div style={{ flex: 1, padding: '1rem' }}>
           <ServiceEditPage />
+        </div>
+      </div>
+    ),
+  },
+  {
+    path: '/publications/ajouter',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <PublicationAddPage />
         </div>
       </div>
     ),
