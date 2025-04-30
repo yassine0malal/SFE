@@ -1,139 +1,97 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useRef, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import HeaderPart from "../../components/admin/header";
 import { FaTimes } from "react-icons/fa";
 
-const API_URL = "http://localhost/SFE-Project/backend/public/api/publications";
+const API_URL = "http://localhost/SFE-Project/backend/public/api/galerie";
+const SERVICES_API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
-export default function PublicationFormPage() {
-  const { id } = useParams();
+export default function GalerieAjouterPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef();
 
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    client: "",
-    site: "",
+    prix: "",
+    promotion: "",
     images: [],
+    id_service: "",
   });
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [loading, setLoading] = useState(!!id);
-  const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
-  const [existingImages, setExistingImages] = useState([]); // filenames only
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [services, setServices] = useState([]);
+  const [firstImage, setFirstImage] = useState(null);
+  const [firstImagePreview, setFirstImagePreview] = useState(null);
 
-  // Load data if editing
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    fetch(`${API_URL}?id_publication=${id}`, { credentials: "include" })
+    fetch(SERVICES_API_URL,{
+      method: "GET",
+      credentials: "include",
+    })
       .then(res => res.json())
       .then(data => {
-        if (data.error) throw new Error(data.error);
-        setFormData({
-          title: data.title || "",
-          description: data.description || "",
-          client: data.client || "",
-          site: data.site || "",
-          images: [],
-        });
-        if (data.images && Array.isArray(data.images)) {
-          setExistingImages(data.images.map(img =>
-            img.replace('/images/', '')
-          ));
-          setImagePreviews(
-            data.images.map(img =>
-              img.startsWith("http")
-                ? img
-                : `http://localhost/SFE-Project/backend/public/uploads${img}`
-            )
-          );
-        }
+        console.log("Services API response:", data); // <-- Ajoute ceci
+        setServices(Array.isArray(data) ? data : []);
       })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [id]);
-
-  // Text fields
+      .catch(() => setServices([]));
+  }, []);
+// alert("serc",JSON.stringify(services))
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
-  // File selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
-    setErrors(prev => ({ ...prev, images: "" }));
-    setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
-
-  };
-
-  // Drag & drop
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
-    setErrors(prev => ({ ...prev, images: "" }));
     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
   };
-  const handleDragOver = (e) => e.preventDefault();
 
-  // Open file selector
   const handleUploadClick = () => {
     fileInputRef.current.value = "";
     fileInputRef.current.click();
   };
 
-  // Remove an existing image (from DB)
-  const handleRemoveExistingImage = (idx) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== idx));
-    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
-  };
-
-  // Remove a newly selected image (not yet uploaded)
   const handleRemoveNewImage = (idx) => {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== idx)
     }));
-    setImagePreviews(prev => {
-      const existingCount = existingImages.length;
-      return prev.filter((_, i) => i !== (existingCount + idx));
-    });
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
-  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     let newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Titre requis";
     if (!formData.description.trim()) newErrors.description = "Description requise";
-    if (!formData.client.trim()) newErrors.client = "Client requis";
-    if (!formData.site.trim()) newErrors.site = "Site requis";
-    if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
+    if (!formData.prix.trim()) newErrors.prix = "prix requis";
+    if (
+      !formData.promotion.trim() ||
+      isNaN(formData.promotion) ||
+      Number(formData.promotion) < 0 ||
+      Number(formData.promotion) > 99
+    ) {
+      newErrors.promotion = "La promotion doit être comprise entre 0 et 99";
+    }
+    if (!formData.images || formData.images.length === 0) newErrors.images = "Au moins une image requise";
+    if (!formData.id_service) newErrors.id_service = "Service requis";
+    if (!firstImage) newErrors.first_image = "Image principale requise";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     const formDataToSend = new FormData();
-    if (id) formDataToSend.append("id_publication", id);
     formDataToSend.append("title", formData.title);
     formDataToSend.append("description", formData.description);
-    formDataToSend.append("client", formData.client);
-    formDataToSend.append("site", formData.site);
-
-    // Send existing image names as a comma-separated string
-    if (existingImages.length > 0) {
-      // alert(existingImages.join(","));
-      formDataToSend.append("existing_images", existingImages.join(","));
-    }
-// alert(formDataToSend['existing_images']);
-    // Append each new file as images[]
-    if (formData.images && formData.images.length > 0) {
-      formData.images.forEach(img => formDataToSend.append("images[]", img));
-    }
+    formDataToSend.append("prix", formData.prix);
+    formDataToSend.append("promotion", formData.promotion);
+    formDataToSend.append("id_service", formData.id_service);
+    formDataToSend.append("first_image", firstImage);
+    formData.images.forEach(img => formDataToSend.append("images[]", img));
 
     try {
       setLoading(true);
@@ -144,8 +102,8 @@ export default function PublicationFormPage() {
       });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
-      alert(id ? "Publication modifiée !" : "Publication créée !");
-      navigate("/publications");
+      alert("produit créée !");
+      navigate("/galerie");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -153,20 +111,11 @@ export default function PublicationFormPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <HeaderPart />
-        <div style={styles.loadingMessage}>Chargement...</div>
-      </div>
-    );
-  }
-
   return (
     <div style={styles.container}>
       <HeaderPart />
       <div style={styles.formContainer}>
-        <h1 style={styles.title}>{id ? "Modifier la publication" : "Ajouter une publication"}</h1>
+        <h1 style={styles.title}>Ajouter un produit</h1>
         {error && <div style={styles.errorMessage}>{error}</div>}
         <form onSubmit={handleSubmit} style={styles.form} noValidate>
           <div style={styles.formGroup}>
@@ -193,36 +142,80 @@ export default function PublicationFormPage() {
             {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Client</label>
+            <label style={styles.label}>prix</label>
             <input
-              type="text"
-              name="client"
-              value={formData.client}
+              type="number"
+              name="prix"
+              value={formData.prix}
               onChange={handleChange}
               style={styles.input}
               required
             />
-            {errors.client && <div style={styles.errorMessage}>{errors.client}</div>}
+            {errors.prix && <div style={styles.errorMessage}>{errors.prix}</div>}
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Site web</label>
+            <label style={styles.label}>promotion </label>
             <input
-              type="url"
-              name="site"
-              value={formData.site}
+              type="number"
+              name="promotion"
+              value={formData.promotion}
               onChange={handleChange}
               style={styles.input}
               required
+              min={0}
+              max={99}
             />
-            {errors.site && <div style={styles.errorMessage}>{errors.site}</div>}
+            {errors.promotion && <div style={styles.errorMessage}>{errors.promotion}</div>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Service</label>
+            <select
+              name="id_service"
+              value={formData.id_service}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            >
+              <option value="">-- Sélectionner un service --</option>
+              {(Array.isArray(services) ? services : [])
+                .filter(service => service.is_active == "1" || service.is_active == 1)
+                .map(service => (
+                  <option key={service.service_id} value={service.service_id}>
+                    {service.nom_service}
+                  </option>
+                ))}
+            </select>
+            {errors.id_service && <div style={styles.errorMessage}>{errors.id_service}</div>}
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Image principale (motto)</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={e => {
+                const file = e.target.files[0];
+                setFirstImage(file);
+                setFirstImagePreview(file ? URL.createObjectURL(file) : null);
+                setErrors(prev => ({ ...prev, first_image: "" }));
+              }}
+              style={styles.input}
+              required
+            />
+            {firstImagePreview && (
+              <img
+                src={firstImagePreview}
+                alt="Aperçu image principale"
+                style={{ width: 100, height: 100, objectFit: "cover", marginTop: 8, borderRadius: 8 }}
+              />
+            )}
+            {errors.first_image && <div style={styles.errorMessage}>{errors.first_image}</div>}
           </div>
           <div style={styles.formGroup}>
             <label style={styles.label}>Images</label>
             <div
               style={styles.uploadBox}
               onClick={handleUploadClick}
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
             >
               <img
                 src="/images/cloud_upload.png"
@@ -247,34 +240,13 @@ export default function PublicationFormPage() {
               />
             </div>
             {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
-            {(existingImages.length > 0 || formData.images.length > 0) && (
+            {formData.images.length > 0 && (
               <div style={styles.imagePreviewContainer}>
-                {/* Existing images */}
-                {existingImages.map((img, idx) => (
-                  <div key={`existing-${idx}`} style={styles.previewWrapper}>
-                    <img
-                      src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
-                      alt={`Aperçu ${idx + 1}`}
-                      style={styles.imagePreview}
-                    />
-                    <span
-                      style={styles.removeIcon}
-                      title="Supprimer cette image"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleRemoveExistingImage(idx);
-                      }}
-                    >
-                      <FaTimes />
-                    </span>
-                  </div>
-                ))}
-                {/* New images */}
                 {formData.images.map((file, idx) => (
-                  <div key={`new-${idx}`} style={styles.previewWrapper}>
+                  <div key={idx} style={styles.previewWrapper}>
                     <img
-                      src={imagePreviews[existingImages.length + idx]}
-                      alt={`Aperçu nouveau ${idx + 1}`}
+                      src={imagePreviews[idx]}
+                      alt={`Aperçu ${idx + 1}`}
                       style={styles.imagePreview}
                     />
                     <span
@@ -295,13 +267,13 @@ export default function PublicationFormPage() {
           <div style={styles.buttonGroup}>
             <button
               type="button"
-              onClick={() => navigate("/publications")}
+              onClick={() => navigate("/galerie")}
               style={styles.cancelButton}
             >
               Annuler
             </button>
-            <button type="submit" style={styles.submitButton}>
-              {id ? "Mettre à jour" : "Enregistrer"}
+            <button type="submit" style={styles.submitButton} disabled={loading}>
+              {loading ? "Enregistrement..." : "Enregistrer"}
             </button>
           </div>
         </form>
@@ -431,12 +403,6 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
     transition: "background-color 0.3s",
-  },
-  loadingMessage: {
-    textAlign: "center",
-    marginTop: "100px",
-    fontSize: "18px",
-    color: "#666",
   },
   errorMessage: {
     backgroundColor: "#ffebee",

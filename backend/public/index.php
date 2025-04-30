@@ -23,6 +23,8 @@ $routes = [
     '/api/logout' => __DIR__ . '/../api/logout.php',
     '/api/uploads' => __DIR__ . '/../api/uploads.php',
     '/api/send_message' => __DIR__ . '/../api/send_message.php',
+    '/api/acceuil' => __DIR__ . '/../api/acceuil.php',
+    '/api/galerie' => __DIR__ . '/../api/galerie.php',
 ];
 
 // Redirige vers le bon fichier API si la route existe

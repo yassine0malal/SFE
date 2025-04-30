@@ -620,41 +620,37 @@ export default function PublicationsPage() {
               <button style={iconBtnStyle} onClick={handleDelete}>
                 <FaTrash />
               </button>
-              {/* <button
-                style={{
-                  ...iconBtnStyle,
-                  background: activeStates[current] ? "#fff" : "#FF4757",
-                  color: activeStates[current] ? "#222" : "#fff",
-                }}
-                onClick={handleToggleActive}
-              >
-                <FaPowerOff />
-              </button> */}
+              
             </div>
 
             <div style={titleBarStyle}>{publication.title}</div>
+            <div style={subtitleBarStyle}>service : {publication.nom_service}</div>
 
             <div style={imgSliderStyle}>
-              <button 
-                style={imgArrowBtnStyle("left")} 
-                onClick={prevImg} 
-                disabled={publication.images.length <= 1}
-              >
-                &lt;
-              </button>
-              <img
-                src={`http://localhost/SFE-Project/backend/public/uploads/${publication.images[imgIndex]}`}
-                alt={publication.title}
-                style={imgStyle}
-              />
-              <button 
-                style={imgArrowBtnStyle("right")} 
-                onClick={nextImg} 
-                disabled={publication.images.length <= 1}
-              >
-                &gt;
-              </button>
-            </div>
+  <button 
+    style={imgArrowBtnStyle("left")} 
+    onClick={prevImg} 
+    disabled={publication.images.length <= 1}
+  >
+    &lt;
+  </button>
+  
+  <div style={imageContainerStyle}>
+    <img
+      src={`http://localhost/SFE-Project/backend/public/uploads/${publication.images[imgIndex]}`}
+      alt={publication.title}
+      style={imgStyle}
+    />
+  </div>
+  
+  <button 
+    style={imgArrowBtnStyle("right")} 
+    onClick={nextImg} 
+    disabled={publication.images.length <= 1}
+  >
+    &gt;
+  </button>
+</div>
 
             <div style={dotsRowStyle}>
               {publication.images.map((_, i) => (
@@ -811,14 +807,16 @@ const titleBarStyle = {
   textAlign: "center",
   alignSelf: "center",
 };
-
-const imgSliderStyle = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "100%",
-  marginBottom: "1rem",
-  marginTop: "0.5rem",
+const subtitleBarStyle = {
+  // background: "#fff0f3",
+  color: "#222",
+  fontWeight: "bold",
+  fontSize: "1.2rem",
+  borderRadius: "10px",
+  padding: "0.5rem 2.5rem",
+  margin: "0 0 1.5rem 0",
+  textAlign: "center",
+  alignSelf: "center",
 };
 
 const imgArrowBtnStyle = (side) => ({
@@ -859,15 +857,43 @@ const buttonHoverStyles = {
   boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
 };
 
+// Modifiez ces styles existants
+const imgSliderStyle = {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "100%",
+  margin: "1rem 0",
+  position: "relative"
+};
+
 const imgStyle = {
-  width: 600,
-  height: 300,
-  objectFit: "cover",
+  maxWidth: "100%",
+  maxHeight: "400px", // Hauteur maximale fixe
+  width: "auto",
+  height: "auto",
+  objectFit: "contain", // Changez de 'cover' à 'contain'
   borderRadius: "16px",
   boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
   background: "#fff",
+  padding: "10px"
 };
 
+// Ajoutez ce nouveau style pour le conteneur d'image
+const imageContainerStyle = {
+  position: "relative",
+  maxWidth: "800px",
+  maxHeight: "500px",
+  width: "90%",
+  height: "400px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#fff",
+  borderRadius: "16px",
+  overflow: "hidden",
+  margin: "0 auto"
+};
 const dotsRowStyle = {
   display: "flex",
   justifyContent: "center",

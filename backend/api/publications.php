@@ -34,7 +34,7 @@ function validateImage($file) {
 switch ($method) {
     case 'GET':
         if (isset($_GET['id_publication'])) {
-            $publication = $model->getById($_GET['id_publication']);
+            $publication = $model->getByIdWithService($_GET['id_publication']);
             if ($publication) {
                 $result = [
                     'id_publication' => $publication['id_publication'],
@@ -45,6 +45,8 @@ switch ($method) {
                     'description' => $publication['description'],
                     'client' => $publication['client'],
                     'site' => $publication['site'],
+                    'id_service' => $publication['id_service'],
+                    'nom_service' => $publication['nom_service'], // <-- ici
                 ];
                 echo json_encode($result);
             } else {
@@ -52,7 +54,7 @@ switch ($method) {
                 echo json_encode(['error' => 'Publication non trouvée']);
             }
         } else {
-            $publications = $model->getAll();
+            $publications = $model->getAllWithService();
             $result = array_map(function($pub) {
                 return [
                     'id_publication' => $pub['id_publication'],
@@ -63,6 +65,8 @@ switch ($method) {
                     'description' => $pub['description'],
                     'client' => $pub['client'],
                     'site' => $pub['site'],
+                    'id_service' => $pub['id_service'],
+                    'nom_service' => $pub['nom_service'], // <-- ici
                 ];
             }, $publications);
             echo json_encode($result);
@@ -144,7 +148,9 @@ switch ($method) {
                 $_POST['description'] ?? $publication['description'],
                 $_POST['client'] ?? $publication['client'],
                 $_POST['site'] ?? $publication['site'],
-                implode(',', $imageNames)
+                implode(',', $imageNames),
+                $_POST['id_service'] // <-- ajoute ce champ
+
             );
             
 
@@ -194,7 +200,8 @@ switch ($method) {
                 $_POST['description'],
                 $_POST['client'],
                 $_POST['site'],
-                implode(',', $imageNames)
+                implode(',', $imageNames),
+                $_POST['id_service']
             );
 
             if ($id) {

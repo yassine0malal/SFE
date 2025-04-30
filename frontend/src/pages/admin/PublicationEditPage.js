@@ -1,28 +1,63 @@
-import React, { useRef, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import HeaderPart from "../../components/admin/header";
 import { FaTimes } from "react-icons/fa";
 
 const API_URL = "http://localhost/SFE-Project/backend/public/api/publications";
 const SERVICES_API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
-export default function PublicationAjouterPage() {
+export default function PublicationFormPage() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef();
 
-  const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     client: "",
     site: "",
     images: [],
-    id_service: "", // <-- Ajoute ce champ
+    id_service: "",
   });
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
+  const [existingImages, setExistingImages] = useState([]); 
+  const [services, setServices] = useState([]);
+
+  // Load data if editing
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetch(`${API_URL}?id_publication=${id}`, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setFormData({
+          title: data.title || "",
+          description: data.description || "",
+          client: data.client || "",
+          site: data.site || "",
+          images: [],
+          id_service: data.id_service || "",
+        });
+        if (data.images && Array.isArray(data.images)) {
+          setExistingImages(data.images.map(img =>
+            img.replace('/images/', '')
+          ));
+          setImagePreviews(
+            data.images.map(img =>
+              img.startsWith("http")
+                ? img
+                : `http://localhost/SFE-Project/backend/public/uploads${img}`
+            )
+          );
+        }
+      })
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [id]);
 
   useEffect(() => {
     fetch(SERVICES_API_URL, { credentials: "include" })
@@ -31,31 +66,57 @@ export default function PublicationAjouterPage() {
       .catch(() => setServices([]));
   }, []);
 
+  // Text fields
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+  // File selection
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+    setErrors(prev => ({ ...prev, images: "" }));
     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+
   };
 
+  // Drag & drop
+  const handleDrop = (e) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files);
+    setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+    setErrors(prev => ({ ...prev, images: "" }));
+    setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+  };
+  const handleDragOver = (e) => e.preventDefault();
+
+  // Open file selector
   const handleUploadClick = () => {
     fileInputRef.current.value = "";
     fileInputRef.current.click();
   };
 
+  // Remove an existing image (from DB)
+  const handleRemoveExistingImage = (idx) => {
+    setExistingImages(prev => prev.filter((_, i) => i !== idx));
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  // Remove a newly selected image (not yet uploaded)
   const handleRemoveNewImage = (idx) => {
     setFormData(prev => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== idx)
     }));
-    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+    setImagePreviews(prev => {
+      const existingCount = existingImages.length;
+      return prev.filter((_, i) => i !== (existingCount + idx));
+    });
   };
 
+  // Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     let newErrors = {};
@@ -63,19 +124,23 @@ export default function PublicationAjouterPage() {
     if (!formData.description.trim()) newErrors.description = "Description requise";
     if (!formData.client.trim()) newErrors.client = "Client requis";
     if (!formData.site.trim()) newErrors.site = "Site requis";
-    if (!formData.images || formData.images.length === 0) newErrors.images = "Au moins une image requise";
     if (!formData.id_service) newErrors.id_service = "Service requis";
+    if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
-
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
     formDataToSend.append("description", formData.description);
     formDataToSend.append("client", formData.client);
     formDataToSend.append("site", formData.site);
-    formDataToSend.append("id_service", formData.id_service); // <-- Ajoute ce champ
-    formData.images.forEach(img => formDataToSend.append("images[]", img));
-
+    formDataToSend.append("id_service", formData.id_service);
+    if (id) formDataToSend.append("id_publication", id);
+    if (existingImages.length > 0) {
+      formDataToSend.append("existing_images", existingImages.join(","));
+    }
+    if (formData.images && formData.images.length > 0) {
+      formData.images.forEach(img => formDataToSend.append("images[]", img));
+    }
     try {
       setLoading(true);
       const response = await fetch(API_URL, {
@@ -85,7 +150,7 @@ export default function PublicationAjouterPage() {
       });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
-      alert("Publication créée !");
+      alert(id ? "Publication modifiée !" : "Publication créée !");
       navigate("/publications");
     } catch (err) {
       setError(err.message);
@@ -94,11 +159,20 @@ export default function PublicationAjouterPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <HeaderPart />
+        <div style={styles.loadingMessage}>Chargement...</div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <HeaderPart />
       <div style={styles.formContainer}>
-        <h1 style={styles.title}>Ajouter une publication</h1>
+        <h1 style={styles.title}>{id ? "Modifier la publication" : "Ajouter une publication"}</h1>
         {error && <div style={styles.errorMessage}>{error}</div>}
         <form onSubmit={handleSubmit} style={styles.form} noValidate>
           <div style={styles.formGroup}>
@@ -173,6 +247,8 @@ export default function PublicationAjouterPage() {
             <div
               style={styles.uploadBox}
               onClick={handleUploadClick}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
             >
               <img
                 src="/images/cloud_upload.png"
@@ -197,13 +273,34 @@ export default function PublicationAjouterPage() {
               />
             </div>
             {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
-            {formData.images.length > 0 && (
+            {(existingImages.length > 0 || formData.images.length > 0) && (
               <div style={styles.imagePreviewContainer}>
-                {formData.images.map((file, idx) => (
-                  <div key={idx} style={styles.previewWrapper}>
+                {/* Existing images */}
+                {existingImages.map((img, idx) => (
+                  <div key={`existing-${idx}`} style={styles.previewWrapper}>
                     <img
-                      src={imagePreviews[idx]}
+                      src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
                       alt={`Aperçu ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveExistingImage(idx);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+                {/* New images */}
+                {formData.images.map((file, idx) => (
+                  <div key={`new-${idx}`} style={styles.previewWrapper}>
+                    <img
+                      src={imagePreviews[existingImages.length + idx]}
+                      alt={`Aperçu nouveau ${idx + 1}`}
                       style={styles.imagePreview}
                     />
                     <span
@@ -229,8 +326,8 @@ export default function PublicationAjouterPage() {
             >
               Annuler
             </button>
-            <button type="submit" style={styles.submitButton} disabled={loading}>
-              {loading ? "Enregistrement..." : "Enregistrer"}
+            <button type="submit" style={styles.submitButton}>
+              {id ? "Mettre à jour" : "Enregistrer"}
             </button>
           </div>
         </form>
@@ -360,6 +457,12 @@ const styles = {
     fontWeight: "bold",
     cursor: "pointer",
     transition: "background-color 0.3s",
+  },
+  loadingMessage: {
+    textAlign: "center",
+    marginTop: "100px",
+    fontSize: "18px",
+    color: "#666",
   },
   errorMessage: {
     backgroundColor: "#ffebee",

@@ -7,6 +7,7 @@ function AdminNavbar() {
     { label: "Commentaires", path: "/commentaires" },
     { label: "Réalisations", path: "/publications" },
     { label: "Services", path: "/services" },
+    { label: "Produits", path: "/galerie" },
     { label: "Abonnés", path: "/abonnes" },
     { label: "Contact", path: "/contact" },
   ];

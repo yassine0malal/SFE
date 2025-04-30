@@ -7,12 +7,15 @@ import Publications from './pages/admin/PublicationsPage';
 import Services from './pages/admin/ServicesPage';
 import Abonnes from './pages/admin/AbonnesPage';
 import Contact from './pages/admin/ContactsPage';
-import ServiceFormPage from './pages/admin/ServiceFormPage';
-import PublicationsForm from './pages/admin/PublicationFormPage';
-import SendMessagePage from "./pages/admin/SendMessage";
+import ServiceFormPage from './pages/admin/ServiceEditPage';
+import PublicationsForm from './pages/admin/PublicationEditPage';
+// import SendMessagePage from "./pages/admin/SendMessage";
 import Login from './pages/admin/Login';
 import ServiceEditPage from './pages/admin/ServiceAjouterPage';
 import PublicationAddPage from './pages/admin/PublicationAjouterPage';
+import GalariePage from './pages/admin/GaleriePage';
+import GalerieAjouterPage from './pages/admin/GalerieAjouterPage';
+import GalerieEditPage from './pages/admin/GalerieEditPage';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -113,12 +116,34 @@ const router = createBrowserRouter([
     ),
   },
   {
-    path: '/abonees/envoyer-message',
+    path: '/galerie',
     element: (
       <div style={{ display: 'flex' }}>
         <AdminNavbar />
         <div style={{ flex: 1, padding: '1rem' }}>
-          <SendMessagePage />
+          <GalariePage />
+        </div>
+      </div>
+    ),
+  },
+  {
+    path: '/galerie/ajouter',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <GalerieAjouterPage />
+        </div>
+      </div>
+    ),
+  },
+  {
+    path: '/galerie/editer/:id',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <GalerieEditPage />
         </div>
       </div>
     ),

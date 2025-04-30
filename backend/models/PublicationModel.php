@@ -11,21 +11,40 @@ class PublicationModel {
         return $this->db->select("SELECT * FROM publications");
     }
 
+
+    public function getAllWithService() {
+        return $this->db->select("
+            SELECT p.*, s.nom_service
+            FROM publications p
+            LEFT JOIN services s ON p.id_service = s.service_id
+        ");
+    }
+    
+    public function getByIdWithService($id_publication) {
+        return $this->db->selectOne("
+            SELECT p.*, s.nom_service
+            FROM publications p
+            LEFT JOIN services s ON p.id_service = s.service_id
+            WHERE p.id_publication = ?
+        ", [$id_publication]);
+    }
+
     public function getById($id_publication) {
         return $this->db->selectOne("SELECT * FROM publications WHERE id_publication = ?", [$id_publication]);
     }
 
-    public function create($title, $description, $client, $site, $images) {
+    public function create($title, $description, $client, $site, $images,$id_service) {
         return $this->db->insert('publications', [
             'title' => $title,
             'description' => $description,
             'client' => $client,
             'site' => $site,
-            'images' => $images
+            'images' => $images,
+            'id_service' => $id_service
         ]);
     }
 
-    public function update($id_publication, $title, $description, $client, $site, $images) {
+    public function update($id_publication, $title, $description, $client, $site, $images, $id_service) {
         $result = $this->db->update(
             'publications',
             [
@@ -33,7 +52,8 @@ class PublicationModel {
                 'description' => $description,
                 'client' => $client,
                 'site' => $site,
-                'images' => $images
+                'images' => $images,
+                'id_service' => $id_service
             ],
             'id_publication = ?',
             [$id_publication]
