@@ -17,21 +17,21 @@ switch ($method) {
         echo json_encode($result);
         break;
 
-    case 'POST':
-        $data = json_decode(file_get_contents('php://input'), true);
-        if (isset($data['nom_prenom'], $data['adresse_email'], $data['telephone'], $data['sujet'])) {
-            $id = $model->create([
-                'nom_prenom' => $data['nom_prenom'],
-                'adresse_email' => $data['adresse_email'],
-                'telephone' => $data['telephone'],
-                'sujet' => $data['sujet']
-            ]);
-            echo json_encode(['success' => true, 'id' => $id]);
-        } else {
-            http_response_code(400);
-            echo json_encode(['error' => 'Champs manquants']);
-        }
-        break;
+    // case 'POST':
+    //     $data = json_decode(file_get_contents('php://input'), true);
+    //     if (isset($data['nom_prenom'], $data['adresse_email'], $data['telephone'], $data['sujet'])) {
+    //         $id = $model->create([
+    //             'nom_prenom' => $data['nom_prenom'],
+    //             'adresse_email' => $data['adresse_email'],
+    //             'telephone' => $data['telephone'],
+    //             'sujet' => $data['sujet']
+    //         ]);
+    //         echo json_encode(['success' => true, 'id' => $id]);
+    //     } else {
+    //         http_response_code(400);
+    //         echo json_encode(['error' => 'Champs manquants']);
+    //     }
+    //     break;
 
         case 'DELETE':
             if (isset($_GET['id_contact'])) {

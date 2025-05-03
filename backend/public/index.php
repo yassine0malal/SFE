@@ -25,6 +25,10 @@ $routes = [
     '/api/send_message' => __DIR__ . '/../api/send_message.php',
     '/api/acceuil' => __DIR__ . '/../api/acceuil.php',
     '/api/galerie' => __DIR__ . '/../api/galerie.php',
+    '/api/client/contact' => __DIR__ . '/../api/client/contact.php',
+    '/api/client/abonnees' => __DIR__ . '/../api/client/abonnees.php',
+    '/api/client/csrf' => __DIR__ . '/../api/client/csrf.php',
+
 ];
 
 // Redirige vers le bon fichier API si la route existe

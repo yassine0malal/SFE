@@ -18,11 +18,19 @@ class AbonneeModel {
         $sql = "SELECT * FROM abonnees WHERE id = ?";
         return $this->db->selectOne($sql, [$id]);
     }
+    public function getByEmail($email_telephone) {
+        $sql = "SELECT * FROM abonnees WHERE email_telephone = ?";
+        return $this->db->selectOne($sql, [$email_telephone]);
+    }
 
-    public function create($email_telephone) {
-        return $this->db->insert('abonnees', [
-            'email_telephone' => $email_telephone
-        ]);
+    public function create($data) {
+        // Convert arrays to JSON strings before insertion
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = json_encode($value);
+            }
+        }
+        return $this->db->insert('abonnees', $data);
     }
 
     public function delete($id) {
