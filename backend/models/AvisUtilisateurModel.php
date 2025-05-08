@@ -12,7 +12,11 @@ class AvisUtilisateurModel {
     }
 
     public function getById($id) {
-        return $this->db->selectOne("SELECT * FROM avis_utilisateurs WHERE id = ?", [$id]);
+        return $this->db->selectOne("SELECT * FROM avis_utilisateurs WHERE id  = ?", [$id]);
+    }
+
+    public function getByPublicationId($id_publication) {
+        return $this->db->select("SELECT * FROM avis_utilisateurs WHERE id_publication = ? and approuve = 1 ", [$id_publication]);
     }
 
     public function create($nom_prenom, $message, $id_service = null, $id_publication = null) {
@@ -27,6 +31,8 @@ class AvisUtilisateurModel {
         if ($id_publication !== null) {
             $data['id_publication'] = $id_publication;
         }
+
+        $data['approuve'] = null;
         return $this->db->insert('avis_utilisateurs', $data);
     }
 

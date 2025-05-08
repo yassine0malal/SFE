@@ -16,19 +16,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     try {
-      const response = await fetch("/SFE-Project/backend/api/client/abonnees.php", {
+      const response = await fetch("/SFE-Project/backend/public/api/client/abonnees", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ contact: value })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contact: value }),
       });
+      
       const result = await response.json();
+
+      if (!response.ok) { // Gérer les erreurs HTTP (400, 409, etc.)
+        const errorMsg =  "vous êtes déjà inscrit(e) !";
+        alert(errorMsg);
+        return;
+      }
+
       if (result.success) {
         alert("Merci pour votre inscription !");
         form.reset();
-      } else {
-        alert(result.error || "Erreur lors de l'inscription.");
       }
+
     } catch (err) {
       alert("Erreur réseau ou serveur.");
     }

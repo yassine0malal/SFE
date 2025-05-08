@@ -125,7 +125,8 @@ switch ($method) {
                 $_POST['description'],
                 $_POST['is_active'],
                 $_POST['details'],
-                $imageName
+                $imageName,
+                $_POST['className']
             );
             echo json_encode(['success' => (bool)$updated]);
         } else {
@@ -174,7 +175,8 @@ switch ($method) {
                         $_POST['description'],
                         $_POST['details'] ?? '',
                         isset($_POST['is_active']) ? (bool)$_POST['is_active'] : true,
-                        $imageName
+                        $imageName,
+                        $_POST['className'] ?? ''
                     );
                     
                     if ($id) {
@@ -228,7 +230,8 @@ switch ($method) {
                         $data['description'],
                         $data['is_active'],
                         $data['details'],
-                        $service['image']
+                        $service['image'],
+                        $data['className'] ?? ''
                     );
                     echo json_encode(['success' => (bool)$updated]);
                 }

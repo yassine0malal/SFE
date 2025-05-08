@@ -7,25 +7,30 @@ class ServiceModel {
         $this->db = Database::getInstance();
     }
 
-    public function getAll() {
-        return $this->db->select("SELECT * FROM services");
+    public function getAll($query = null) {
+        if ($query) {
+            return $this->db->select($query);
+        }
+        return $this->db->select("SELECT * FROM services  ORDER BY service_id DESC");
     }
 
     public function getById($service_id) {
-        return $this->db->selectOne("SELECT * FROM services WHERE service_id = ?", [$service_id]);
+        return $this->db->selectOne("SELECT service_id ,nom_service,description,image,details,className FROM services WHERE service_id = ?", [$service_id]);
     }
 
-    public function create($nom_service, $description,$details,$is_active, $image) {
+    public function create($nom_service, $description,$details,$is_active, $image, $className) {
         return $this->db->insert('services', [
             'nom_service' => $nom_service,
             'description' => $description,
             'details'=>$details,
             'is_active' => $is_active,
-            'image' => $image
+            'image' => $image,
+            'className' => $className
+
         ]);
     }
 
-    public function update($service_id, $nom_service, $description,$is_active,$details, $image) {
+    public function update($service_id, $nom_service, $description,$is_active,$details, $image,$className) {
         return $this->db->update(
             'services',
             [
@@ -33,7 +38,8 @@ class ServiceModel {
                 'description' => $description,
                 'image' => $image,
                 'details' => $details,
-                'is_active' => $is_active
+                'is_active' => $is_active,
+                'className' => $className
 
             ],
             'service_id = ?',

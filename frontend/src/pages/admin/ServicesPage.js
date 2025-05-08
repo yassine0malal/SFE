@@ -27,36 +27,24 @@ const ServicesPage = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch(API_URL, {
-          credentials: 'include'
-        });
-        
+        const response = await fetch(API_URL, { credentials: 'include' });
         const data = await response.json();
-        
-        // Check if user is not authenticated
+
         if (data.error === "Non authentifié") {
-          // Redirect to login page
           window.location.href = "/login";
           return;
         }
-        
-        if (!response.ok) {
-          throw new Error('Erreur de récupération des services');
-        }
-        
-        // Ensure data is an array
+
         if (Array.isArray(data)) {
-          // Convert numeric values to booleans
           const servicesWithStatus = data.map(service => ({
             ...service,
-            is_active: service.is_active === '1'
+            is_active: service.is_active === '1',
+            className: service.className || 'flaticon-brand'
           }));
           setServices(servicesWithStatus);
         } else {
           setServices([]);
-          if (data.error) {
-            setError(data.error);
-          }
+          if (data.error) setError(data.error);
         }
       } catch (err) {
         setError(err.message);
@@ -64,7 +52,7 @@ const ServicesPage = () => {
         setLoading(false);
       }
     };
-    
+
     fetchServices();
   }, []);
 
@@ -74,7 +62,6 @@ const ServicesPage = () => {
       const result = await apiCall();
       return result;
     } catch (err) {
-      // If the error is due to authentication
       if (err.message.includes('Non authentifié')) {
         window.location.href = "/login";
         return null;
@@ -86,22 +73,22 @@ const ServicesPage = () => {
   // Delete service handler with authentication check
   const handleDelete = async (serviceId) => {
     if (!window.confirm("Voulez-vous vraiment supprimer ce service ?")) return;
-    
+
     try {
-      const response = await checkAuthAndProceed(() => 
+      const response = await checkAuthAndProceed(() =>
         fetch(`${API_URL}?service_id=${serviceId}`, {
           method: 'DELETE',
           credentials: 'include'
         })
       );
-      
-      if (!response) return; // Authentication failed
-      
+
+      if (!response) return;
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Échec de la suppression');
       }
-      
+
       setServices(prev => prev.filter(s => s.service_id !== serviceId));
       alert('Service supprimé avec succès');
     } catch (err) {
@@ -113,9 +100,8 @@ const ServicesPage = () => {
   const handleToggleActive = async (service) => {
     const newStatus = !service.is_active;
     const originalStatus = service.is_active;
-    
+
     try {
-      // Mise à jour optimiste immédiate
       setServices(prev =>
         prev.map(s =>
           s.service_id === service.service_id
@@ -123,8 +109,8 @@ const ServicesPage = () => {
             : s
         )
       );
-      
-      const response = await checkAuthAndProceed(() => 
+
+      const response = await checkAuthAndProceed(() =>
         fetch(API_URL, {
           method: 'PUT',
           credentials: 'include',
@@ -135,20 +121,20 @@ const ServicesPage = () => {
             description: service.description,
             details: service.details,
             image: service.image,
-            is_active: newStatus ? 1 : 0 // Conversion en numérique
+            is_active: newStatus ? 1 : 0,
+            className: service.className
           })
         })
       );
-      
-      if (!response) return; // Authentication failed
-      
+
+      if (!response) return;
+
       const data = await response.json();
-      
+
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Échec de la mise à jour');
       }
     } catch (err) {
-      // Revert en cas d'erreur
       setServices(prev =>
         prev.map(s =>
           s.service_id === service.service_id
@@ -160,14 +146,12 @@ const ServicesPage = () => {
     }
   };
 
-  // Rest of your component remains the same...
-  // Update active states
   useEffect(() => {
     setActiveStates(prev => {
       if (services.length === prev.length) return prev;
       return services.map((_, i) => prev[i] ?? true);
     });
-    
+
     if (currentPage > Math.ceil(services.length / CARDS_PER_PAGE) - 1) {
       setCurrentPage(Math.max(0, Math.ceil(services.length / CARDS_PER_PAGE) - 1));
     }
@@ -201,6 +185,15 @@ const ServicesPage = () => {
       setCurrentPage((prev) => (prev === pageCount - 1 ? 0 : prev + 1));
       setAnimating(false);
     }, 500);
+  };
+
+  // Helper for icon label (implement as needed)
+  const getIconLabel = (iconClass) => {
+    // Example: return a label based on iconClass
+    if (!iconClass) return "";
+    if (iconClass === "flaticon-brand") return "Brand";
+    // Add more mappings as needed
+    return iconClass;
   };
 
   return (
@@ -289,7 +282,6 @@ const ServicesPage = () => {
                           height: 'auto',
                           objectFit: 'cover',
                           borderRadius: '8px',
-                          // Add fallback for broken images
                           onError: (e) => {
                             e.target.onerror = null;
                             e.target.src = 'http://localhost/SFE-Project/backend/public/assets/placeholder.png';
@@ -305,6 +297,38 @@ const ServicesPage = () => {
                     </p>
                     <h4 style={{ marginTop: "15px" }}>Détails</h4>
                     <p style={{ fontSize: "11px", textAlign: "start" }}>{service.details}</p>
+                    {/* Display className field */}
+                    <div style={{
+                      margin: "10px 0",
+                      fontSize: "12px",
+                      color: "#fff",
+                      textAlign: "center",
+                      fontWeight: "bold"
+                    }}>
+                      {/* <span>Classe d'icône : {service.className}</span> */}
+                    </div>
+                    {/* Icon display section */}
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "8px",
+                      margin: "10px 0",
+                      padding: "5px",
+                      backgroundColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "4px"
+                    }}>
+                      <i className={service.className} style={{
+                        fontSize: "20px",
+                        color: "#fff"
+                      }}></i>
+                      <span style={{
+                        fontSize: "12px",
+                        fontWeight: "bold"
+                      }}>
+                        Classe d'icône :{(service.className)}
+                      </span>
+                    </div>
                   </div>
                   <div style={buttonContainerStyle}>
                     <button

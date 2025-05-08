@@ -63,13 +63,12 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     try {
-      const response = await fetch("/SFE-Project/backend/api/client/contact", {
+      const response = await fetch("/SFE-Project/backend/public/api/client/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         credentials: "include",
-        // Envoi des données au format JSON
         body: JSON.stringify(data)
       });
 

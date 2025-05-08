@@ -14,7 +14,7 @@ $apiPath = strtok($apiPath, '?'); // enlève les paramètres GET
 $routes = [
     '/api/abonnees' => __DIR__ . '/../api/abonnees.php',
     '/api/admins' => __DIR__ . '/../api/admins.php',
-    '/api/avis_utilisateurs' => __DIR__ . '/../api/avis_tutilisateurs.php',
+    '/api/avis_utilisateurs' => __DIR__ . '/../api/avis_utilisateurs.php',
     '/api/contact' => __DIR__ . '/../api/contact.php',
     '/api/projects_requests' => __DIR__ . '/../api/projects_requests.php',
     '/api/publications' => __DIR__ . '/../api/publications.php',
@@ -28,6 +28,9 @@ $routes = [
     '/api/client/contact' => __DIR__ . '/../api/client/contact.php',
     '/api/client/abonnees' => __DIR__ . '/../api/client/abonnees.php',
     '/api/client/csrf' => __DIR__ . '/../api/client/csrf.php',
+    '/api/client/services' => __DIR__ . '/../api/client/services.php',
+    '/api/client/publications' => __DIR__ . '/../api/client/publications.php',
+    '/api/client/avis_utilisateurs' => __DIR__ . '/../api/client/avis_utilisateurs.php',
 
 ];
 

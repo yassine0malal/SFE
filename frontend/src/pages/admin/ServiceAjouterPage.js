@@ -4,12 +4,25 @@ import HeaderPart from "../../components/admin/header";
 
 const API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
+// Define available icon options
+const iconOptions = [
+  { value: "flaticon-brand", label: "Brand" },
+  { value: "flaticon-tablet", label: "Tablet/Mobile" },
+  { value: "flaticon-satellite-dish", label: "Digital Marketing" },
+  { value: "flaticon-laptop", label: "Web Development" },
+  { value: "flaticon-chatting", label: "Website Design" },
+  { value: "flaticon-3d", label: "3D Animation" },
+  { value: "flaticon-code", label: "Programming" },
+  { value: "flaticon-web-design", label: "Web Design" }
+];
+
 export default function ServiceFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
 
   const [formData, setFormData] = useState({
+    className: "flaticon-brand" ,// Added default icon class
     nom_service: "",
     description: "",
     details: "",
@@ -43,7 +56,8 @@ export default function ServiceFormPage() {
               description: service.description,
               details: service.details,
               is_active: service.is_active === 1 || service.is_active === true,
-              image: null
+              image: null,
+              className: service.className || "flaticon-brand" // Add this line
             });
             
             if (service.image) {
@@ -94,7 +108,8 @@ export default function ServiceFormPage() {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("details", formData.details);
       formDataToSend.append("is_active", formData.is_active ? 1 : 0);
-      
+      formDataToSend.append("className", formData.className); // Add this line
+
       if (formData.image) {
         formDataToSend.append("image", formData.image);
       }
@@ -122,6 +137,19 @@ export default function ServiceFormPage() {
       console.error("Submission error:", err);
     }
   };
+// Function to render icon preview
+const renderIconPreview = () => {
+  return (
+    <div style={styles.iconPreviewContainer}>
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
+        <i className={formData.className} style={styles.iconPreview}></i>
+        <p style={{...styles.iconNote, marginTop: "5px"}}>
+          Sélectionnez une icône qui représente ce service
+        </p>
+      </div>
+    </div>
+  );
+};
 
   if (loading) {
     return (
@@ -178,6 +206,26 @@ export default function ServiceFormPage() {
               style={styles.textarea}
               required
             />
+          </div>
+          
+          {/* New icon class selection */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Icône du service</label>
+            <select
+              name="className"
+              value={formData.className}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            >
+              {iconOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {renderIconPreview()}
+            {/* <p style={styles.iconNote}>Sélectionnez une icône qui représente ce service</p> */}
           </div>
           
           <div style={styles.formGroup}>
@@ -312,19 +360,24 @@ const styles = {
   fileInput: {
     padding: "10px 0",
   },
-  imagePreviewContainer: {
+  // New styles for icon preview
+  iconPreviewContainer: {
     marginTop: "10px",
-  },
-  imagePreview: {
-    maxWidth: "100%",
-    maxHeight: "200px",
-    borderRadius: "4px",
+    padding: "15px",
     border: "1px solid #ddd",
+    borderRadius: "4px",
+    display: "flex",
+    justifyContent: "center",
+    backgroundColor: "#f9f9f9",
   },
-  imageNote: {
+  iconPreview: {
+    fontSize: "40px",
+    color: "#FF5C78",
+  },
+  iconNote: {
     fontSize: "14px",
     color: "#666",
-    marginTop: "5px",
+    marginTop: "2px",
   },
   buttonGroup: {
     display: "flex",

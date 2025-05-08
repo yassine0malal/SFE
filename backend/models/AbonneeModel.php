@@ -18,9 +18,9 @@ class AbonneeModel {
         $sql = "SELECT * FROM abonnees WHERE id = ?";
         return $this->db->selectOne($sql, [$id]);
     }
-    public function getByEmail($email_telephone) {
+    public function getByEmail($contact) {
         $sql = "SELECT * FROM abonnees WHERE email_telephone = ?";
-        return $this->db->selectOne($sql, [$email_telephone]);
+        return $this->db->selectOne($sql, [$contact]);
     }
 
     public function create($data) {

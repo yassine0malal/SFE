@@ -11,7 +11,12 @@
 //         $input = json_decode(file_get_contents('php://input'), true);
 //         $contact = trim($input['contact'] ?? '');
 
-//         // Validation : email OU numéro de téléphone
+//         // Check if $contact is an array (malformed request)
+//         if (is_array($contact)) {
+//             $contact = json_encode($contact); // Convert array to JSON string
+//         }
+
+//         // Validation: email or phone
 //         $isEmail = filter_var($contact, FILTER_VALIDATE_EMAIL);
 //         $isPhone = preg_match('/^\d{6,15}$/', $contact);
 
@@ -21,14 +26,14 @@
 //             exit;
 //         }
 
-//         // Vérifie si déjà abonné
-//         if ($model->getByEmail($contact)) {
+//         // Check if already subscribed
+//         if ($model->getByEmail(strval($contact))) {
 //             echo json_encode(['success' => true, 'message' => 'Déjà inscrit.']);
 //             exit;
 //         }
-//         var_dump($contact);
 
-//         $id = $model->create(['email_telephone' => strval($contact)]);
+//         // Insert sanitized data
+//         $id = $model->create(['email_telephone' => $contact]);
 //         echo json_encode(['success' => true, 'id' => $id]);
 //         exit;
 //     }
@@ -58,7 +63,7 @@ if ($method === 'POST') {
 
         // Check if $contact is an array (malformed request)
         if (is_array($contact)) {
-            $contact = json_encode($contact); // Convert array to JSON string
+            $contact = json_encode($contact);
         }
 
         // Validation: email or phone
@@ -72,8 +77,15 @@ if ($method === 'POST') {
         }
 
         // Check if already subscribed
-        if ($model->getByEmail($contact)) {
-            echo json_encode(['success' => true, 'message' => 'Déjà inscrit.']);
+        $existingContact = $model->getByEmail($contact);
+        if ($existingContact) {
+            // Determine if it's an email or phone
+            $message = $isEmail 
+                ? "Cet email est déjà inscrit." 
+                : "Ce numéro de téléphone est déjà inscrit.";
+            
+            http_response_code(409); // 409 Conflict
+            echo json_encode(['success' => false, 'message' => $message||'you are already subscribed']);
             exit;
         }
 

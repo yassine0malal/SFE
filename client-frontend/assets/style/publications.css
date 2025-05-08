@@ -1,0 +1,16 @@
+Add to your assets/css/style.css or a custom CSS file
+.blog-img-large img {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    margin: 20px 0;
+}
+@media (max-width: 991px) {
+    .blog-img-large img {
+        max-width: 100%;
+    }
+}
+

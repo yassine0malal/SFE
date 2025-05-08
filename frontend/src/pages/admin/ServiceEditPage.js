@@ -8,19 +8,37 @@ export default function ServiceFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
-
   const [formData, setFormData] = useState({
     nom_service: "",
     description: "",
     details: "",
     is_active: true,
-    image: null
+    image: null,
+    className: "flaticon-brand" // Default icon class
   });
-  
+ 
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(isEditing);
   const [error, setError] = useState(null);
-
+  
+  // Define available icon options
+  const iconOptions = [
+    { value: "flaticon-brand", label: "Brand" },
+    { value: "flaticon-tablet", label: "Tablet/Mobile" },
+    { value: "flaticon-satellite-dish", label: "Digital Marketing" },
+    { value: "flaticon-laptop", label: "Web Development" },
+    { value: "flaticon-chatting", label: "Website Design" },
+    { value: "flaticon-3d", label: "3D Animation" },
+    { value: "flaticon-code", label: "Programming" },
+    { value: "flaticon-web-design", label: "Web Design" }
+  ];
+  
+  // Helper function to get label for an icon value
+  const getIconLabel = (iconValue) => {
+    const option = iconOptions.find(opt => opt.value === iconValue);
+    return option ? option.label : "Icon";
+  };
+ 
   useEffect(() => {
     if (isEditing) {
       const fetchServiceData = async () => {
@@ -35,15 +53,16 @@ export default function ServiceFormPage() {
           const data = await response.json();
           if (data.error === "Non authentifié") window.location.href = "/login";
           if (data.error) throw new Error(data.error);
-
           const service = Array.isArray(data) ? data[0] : data;
           if (service) {
+            console.log("Service data:", service); // Debug log
             setFormData({
               nom_service: service.nom_service,
               description: service.description,
               details: service.details,
-              is_active: service.is_active === "1" || service.is_active === true,
-              image: null
+              is_active: service.is_active === 1 || service.is_active === true,
+              image: null,
+              className: service.className || "flaticon-brand" // Set icon class from service data
             });
             
             if (service.image) {
@@ -84,61 +103,36 @@ export default function ServiceFormPage() {
     e.preventDefault();
     
     try {
-      let response;
+      let formDataToSend = new FormData();
       
       if (isEditing) {
-        if (formData.image) {
-          // Use POST for updates with image
-          const formDataToSend = new FormData();
-          formDataToSend.append("service_id", id);
-          formDataToSend.append("nom_service", formData.nom_service);
-          formDataToSend.append("description", formData.description);
-          formDataToSend.append("details", formData.details);
-          formDataToSend.append("is_active", formData.is_active ? 1 : 0);
-          formDataToSend.append("image", formData.image);
-
-          response = await fetch(API_URL, {
-            method: 'POST',
-            credentials: 'include',
-            body: formDataToSend
-          });
-        } else {
-          // Use PUT for updates without image
-          response = await fetch(API_URL, {
-            method: 'PUT',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              service_id: id,
-              nom_service: formData.nom_service,
-              description: formData.description,
-              details: formData.details,
-              is_active: formData.is_active ? 1 : 0
-            })
-          });
-        }
-      } else {
-        // Create new service
-        const formDataToSend = new FormData();
-        formDataToSend.append("nom_service", formData.nom_service);
-        formDataToSend.append("description", formData.description);
-        formDataToSend.append("details", formData.details);
-        formDataToSend.append("is_active", formData.is_active ? 1 : 0);
-        formDataToSend.append("image", formData.image);
-
-        response = await fetch(API_URL, {
-          method: 'POST',
-          credentials: 'include',
-          body: formDataToSend
-        });
+        formDataToSend.append("service_id", id);
       }
-
+      
+      formDataToSend.append("nom_service", formData.nom_service);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("details", formData.details);
+      formDataToSend.append("is_active", formData.is_active ? 1 : 0);
+      formDataToSend.append("className", formData.className); // Add icon class to form data
+      
+      if (formData.image) {
+        formDataToSend.append("image", formData.image);
+      }
+      const method = isEditing ? "POST" : "POST"; // Always use POST for FormData
+      const url = API_URL + (isEditing ? "" : "");
+      const response = await fetch(url, {
+        method: method,
+        credentials: 'include',
+        body: formDataToSend
+      });
       const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Une erreur est survenue");
-
+      
+      if (!response.ok) {
+        throw new Error(result.error || "Une erreur est survenue");
+      }
       alert(isEditing ? "Service modifié avec succès!" : "Service ajouté avec succès!");
       navigate("/services");
-      
+    
     } catch (err) {
       alert("Erreur: " + err.message);
       console.error("Submission error:", err);
@@ -202,6 +196,33 @@ export default function ServiceFormPage() {
             />
           </div>
           
+          {/* Icon selection with inline preview */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Icône du service</label>
+            <div style={styles.iconSelectionContainer}>
+              <select
+                name="className"
+                value={formData.className}
+                onChange={handleChange}
+                style={styles.iconSelect}
+                required
+              >
+                {iconOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {/* <div style={styles.iconPreviewSmall}>
+                <i className={formData.className}></i>
+              </div> */}
+            </div>
+            <div style={styles.iconPreviewContainer}>
+              <i className={formData.className} style={styles.iconPreview}></i>
+              <p style={styles.iconLabel}>{getIconLabel(formData.className)}</p>
+            </div>
+          </div>
+          
           <div style={styles.formGroup}>
             <label style={styles.checkboxLabel}>
               <input
@@ -222,7 +243,6 @@ export default function ServiceFormPage() {
               onChange={handleChange}
               accept="image/*"
               style={styles.fileInput}
-              // Only required when adding a new service
               required={!isEditing}
             />
             
@@ -258,7 +278,7 @@ export default function ServiceFormPage() {
   );
 }
 
-// Styles
+// Styles with improved icon selection styling
 const styles = {
   container: {
     position: "relative",
@@ -346,6 +366,53 @@ const styles = {
     fontSize: "14px",
     color: "#666",
     marginTop: "5px",
+  },
+  // New styles for icon selection
+  iconSelectionContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+  },
+  iconSelect: {
+    padding: "12px",
+    borderRadius: "4px",
+    border: "1px solid #ddd",
+    fontSize: "16px",
+    flex: 1,
+  },
+  iconPreviewSmall: {
+    width: "40px",
+    height: "40px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f9f9f9",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    fontSize: "20px",
+    color: "#FF5C78",
+  },
+  iconPreviewContainer: {
+    marginTop: "10px",
+    padding: "20px",
+    backgroundColor: "#f9f9f9",
+    border: "1px solid #ddd",
+    borderRadius: "4px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconPreview: {
+    fontSize: "48px",
+    color: "#FF5C78",
+    marginBottom: "10px",
+  },
+  iconLabel: {
+    fontSize: "14px",
+    color: "#666",
+    fontWeight: "bold",
+    margin: 0,
   },
   buttonGroup: {
     display: "flex",
