@@ -38,10 +38,15 @@ document.addEventListener("DOMContentLoaded", function () {
     // Render comments as slides
     wrapper.innerHTML = comments.map(comment => `
       <div class="swiper-slide">
+      	<div class="bi-portfolio-details-content headline pera-content">
+				<h1 style="color: #FF3838;"><b>Voir les Commentaires</b></h1>
+			</div> <br> <br><br>
         <div class="bi-testimonial-item d-flex">
           <div class="testimonial-img"></div>
           <div class="testimonial-text headline pera-content">
-            <h3 style="color:white">${comment.nom_prenom || 'Utilisateur'}</h3>
+		
+		 
+            <h3 style="color:white">“ ${comment.nom_prenom || 'Utilisateur'} ”</h3>
             <div class="testimonial-desc-author">
               <p>${comment.message || ''}</p>
             </div>

@@ -1,7 +1,5 @@
 <?php
 require_once __DIR__ . '/../../models/ServiceModel.php';
-require_once __DIR__ . '/../../includes/auth.php';
-requireAdminAuth();
 
 $model = new ServiceModel();
 $method = $_SERVER['REQUEST_METHOD'];

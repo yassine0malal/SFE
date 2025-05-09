@@ -31,6 +31,7 @@ $routes = [
     '/api/client/services' => __DIR__ . '/../api/client/services.php',
     '/api/client/publications' => __DIR__ . '/../api/client/publications.php',
     '/api/client/avis_utilisateurs' => __DIR__ . '/../api/client/avis_utilisateurs.php',
+    '/api/client/produits' => __DIR__ . '/../api/client/produits.php',
 
 ];
 
