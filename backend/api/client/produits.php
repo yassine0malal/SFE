@@ -3,8 +3,7 @@ error_reporting(0);
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../../models/GalerieModel.php';
-require_once __DIR__ . '/../../includes/auth.php';
-requireAdminAuth();
+
 
 $model = new GalerieModel();
 $method = $_SERVER['REQUEST_METHOD'];
@@ -34,7 +33,7 @@ function validateImage($file) {
 switch ($method) {
     case 'GET':
         if (isset($_GET['id_galerie'])) {
-            $galerie = $model->getByIdWithService($_GET['id_galerie']);
+            $galerie = $model->getById($_GET['id_galerie']);
             if ($galerie) {
                 $result = [
                     'id_galerie' => $galerie['id_galerie'],

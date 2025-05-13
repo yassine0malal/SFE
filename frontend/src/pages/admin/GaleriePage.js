@@ -224,7 +224,7 @@ const promotionBannerStyle = {
             </div>
 
             <div style={titleBarStyle}>{publication.title}</div>
-            <div style={subtitleBarStyle}>{publication.nom_service}</div>
+            <div style={subtitleBarStyle}><span style={{color:"#FF5C78"}}> service : </span> {publication.nom_service}</div>
 
        
 

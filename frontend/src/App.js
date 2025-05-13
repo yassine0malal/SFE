@@ -16,6 +16,8 @@ import PublicationAddPage from './pages/admin/PublicationAjouterPage';
 import GalariePage from './pages/admin/GaleriePage';
 import GalerieAjouterPage from './pages/admin/GalerieAjouterPage';
 import GalerieEditPage from './pages/admin/GalerieEditPage';
+import ClientsPage from './pages/admin/ClientPage';
+import ClientAjouterPage from './pages/admin/clientsAjouterPage';
 const router = createBrowserRouter([
   {
     path: '/',
@@ -144,6 +146,28 @@ const router = createBrowserRouter([
         <AdminNavbar />
         <div style={{ flex: 1, padding: '1rem' }}>
           <GalerieEditPage />
+        </div>
+      </div>
+    ),
+  },
+  {
+    path: '/clients',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <ClientsPage />
+        </div>
+      </div>
+    ),
+  },
+  {
+    path: '/clients/ajouter',
+    element: (
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <ClientAjouterPage />
         </div>
       </div>
     ),

@@ -10,6 +10,7 @@ function AdminNavbar() {
     { label: "Produits", path: "/galerie" },
     { label: "Abonnés", path: "/abonnes" },
     { label: "Contact", path: "/contact" },
+    { label: "Clients", path: "/clients" },
   ];
 
   const location = useLocation(); // Get the current path

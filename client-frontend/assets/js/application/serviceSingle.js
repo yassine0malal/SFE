@@ -1,89 +1,101 @@
 // document.addEventListener('DOMContentLoaded', function() {
-//     // Base URL for images
 //     const BASE_IMAGE_URL = 'http://localhost/SFE-Project/backend/public/uploads/images/';
-    
-//     // Get service ID from URL parameters
+//     const API_URL = '/SFE-Project/backend/public/api/client/services';
 //     const urlParams = new URLSearchParams(window.location.search);
 //     const serviceId = urlParams.get('id');
-    
+
 //     if (!serviceId) {
 //         showError('No service ID provided');
 //         return;
 //     }
-    
-//     // Fetch specific service details
-//     fetchServiceDetails(serviceId);
-    
-//     // Function to fetch service details by ID
-//     function fetchServiceDetails(id) {
-//         fetch(`/SFE-Project/backend/public/api/client/services?id=${id}`)
+
+//     // Fetch all services
+//     fetch(API_URL)
 //         .then(response => {
 //             if (!response.ok) throw new Error('Network response was not ok');
 //             return response.json();
 //         })
-//         .then(service => {
-//             if (service) {
-//                 renderServiceDetails(service);
-//             } else {
+//         .then(services => {
+//             const currentService = services.find(s => s.service_id == serviceId);
+//             if (!currentService) {
 //                 showError('Service not found');
+//                 return;
 //             }
+            
+//             renderServiceDetails(currentService);
+//             populateServicesSidebar(services, currentService);
 //         })
 //         .catch(error => {
 //             console.error('Fetch Error:', error);
 //             showError('Failed to load service details');
 //         });
-//     }
-    
-//     // Function to render service details
+
 //     function renderServiceDetails(service) {
-//         // Update page title
+//         // Update main content (existing code)
 //         document.title = `${service.nom_service} - Services Details`;
         
-//         // Update breadcrumb
 //         const breadcrumbTitle = document.querySelector('.bi-breadcrumbs-content h2');
 //         if (breadcrumbTitle) breadcrumbTitle.textContent = 'Service Details';
         
 //         const breadcrumbService = document.querySelector('.bi-breadcrumbs-content ul li:last-child');
 //         if (breadcrumbService) breadcrumbService.textContent = service.nom_service;
         
-//         // Update service image
 //         const serviceImg = document.querySelector('.bi-service-details-img img');
 //         if (serviceImg) {
 //             serviceImg.src = service.image ? `${BASE_IMAGE_URL}${service.image}` : 'assets/img/service/serd1.jpg';
 //             serviceImg.alt = service.nom_service;
 //         }
         
-//         // Update service title
 //         const serviceTitle = document.querySelector('.bi-service-details-text h3');
 //         if (serviceTitle) serviceTitle.textContent = service.nom_service;
         
-//         // Update service description and details
 //         const serviceDescriptionParagraphs = document.querySelectorAll('.bi-service-details-text > p');
 //         if (serviceDescriptionParagraphs.length >= 1) {
-//             // First paragraph for description
 //             serviceDescriptionParagraphs[0].textContent = service.description;
             
-//             // If details exist, split them into paragraphs
 //             if (service.details) {
 //                 const detailsParagraphs = service.details.split('\n\n');
-                
-//                 // Update remaining paragraphs if they exist
 //                 for (let i = 0; i < Math.min(detailsParagraphs.length, serviceDescriptionParagraphs.length - 1); i++) {
 //                     serviceDescriptionParagraphs[i + 1].textContent = detailsParagraphs[i];
 //                 }
 //             }
 //         }
-        
-//         // Update sidebar service links to highlight current service
-//         const sidebarServiceLinks = document.querySelectorAll('.service-widget ul li a');
-//         sidebarServiceLinks.forEach(link => {
-//             if (link.textContent.trim() === service.nom_service) {
+//     }
+
+//     function populateServicesSidebar(services, currentService) {
+//         const sidebarList = document.querySelector('.service-widget ul');
+//         if (!sidebarList) return;
+
+//         // Clear existing static content
+//         sidebarList.innerHTML = '';
+
+//         // Filter out current service and limit to 6 items
+//         const otherServices = services
+//             .filter(s => s.service_id != currentService.service_id)
+//             .slice(0, 6);
+
+//         if (otherServices.length === 0) {
+//             sidebarList.innerHTML = '<li>Aucun autre service disponible</li>';
+//             return;
+//         }
+
+//         // Create new list items
+//         otherServices.forEach(service => {
+//             const listItem = document.createElement('li');
+//             const link = document.createElement('a');
+            
+//             link.href = `service-single.html?id=${service.service_id}`;
+//             link.textContent = service.nom_service;
+            
+//             if (service.service_id == currentService.service_id) {
 //                 link.classList.add('active');
 //             }
+            
+//             listItem.appendChild(link);
+//             sidebarList.appendChild(listItem);
 //         });
 //     }
-    
-//     // Function to show error message
+
 //     function showError(message) {
 //         const container = document.querySelector('.bi-service-details-text-area');
 //         if (container) {
@@ -95,6 +107,8 @@
 //         }
 //     }
 // });
+
+
 
 
 
@@ -170,26 +184,37 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear existing static content
         sidebarList.innerHTML = '';
 
-        // Filter out current service and limit to 6 items
+        // Create a list of services to display (including current service)
+        // First add the current service
+        const servicesToDisplay = [currentService];
+        
+        // Then add other services (excluding current) up to a total of 6
         const otherServices = services
             .filter(s => s.service_id != currentService.service_id)
-            .slice(0, 6);
-
-        if (otherServices.length === 0) {
-            sidebarList.innerHTML = '<li>Aucun autre service disponible</li>';
+            .slice(0, 5); // Only need 5 more since we already have the current service
+        
+        // Combine the lists
+        servicesToDisplay.push(...otherServices);
+        
+        if (servicesToDisplay.length === 0) {
+            sidebarList.innerHTML = '<li>Aucun service disponible</li>';
             return;
         }
 
         // Create new list items
-        otherServices.forEach(service => {
+        servicesToDisplay.forEach(service => {
             const listItem = document.createElement('li');
             const link = document.createElement('a');
             
             link.href = `service-single.html?id=${service.service_id}`;
             link.textContent = service.nom_service;
             
+            // Add active class and styling to the current service
             if (service.service_id == currentService.service_id) {
                 link.classList.add('active');
+                // Add additional styling to make it stand out
+                link.style.fontWeight = 'bold';
+                link.style.color = '#ff6b61'; // Use your theme's primary color
             }
             
             listItem.appendChild(link);

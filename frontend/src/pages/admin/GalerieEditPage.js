@@ -1,9 +1,380 @@
+// import React, { useState, useEffect, useRef } from "react";
+// import { useParams, useNavigate } from "react-router-dom";
+// import HeaderPart from "../../components/admin/header";
+// import { FaTimes } from "react-icons/fa";
+
+// const API_URL = "http://localhost/SFE-Project/backend/public/api/galerie";
+
+// export default function GalerieEditPage() {
+//   const { id } = useParams();
+//   const navigate = useNavigate();
+//   const fileInputRef = useRef();
+
+//   const [formData, setFormData] = useState({
+//     title: "",
+//     description: "",
+//     prix: "",
+//     promotion: "",
+//     images: [],
+//   });
+//   const [imagePreviews, setImagePreviews] = useState([]);
+//   const [loading, setLoading] = useState(!!id);
+//   const [error, setError] = useState(null);
+//   const [errors, setErrors] = useState({});
+//   const [existingImages, setExistingImages] = useState([]); // filenames only
+//   const [firstImage, setFirstImage] = useState(null);
+//   const [firstImagePreview, setFirstImagePreview] = useState(null);
+//   const [existingFirstImage, setExistingFirstImage] = useState(""); // filename string
+
+//   // Load data if editing
+//   useEffect(() => {
+//     if (!id) return;
+//     setLoading(true);
+//     fetch(`${API_URL}?id_galerie=${id}`, { credentials: "include" })
+//       .then(res => res.json())
+//       .then(data => {
+//         if (data.error) throw new Error(data.error);
+//         setFormData({
+//           title: data.title || "",
+//           description: data.description || "",
+//           prix: data.prix || "",
+//           promotion: data.promotion || "",
+//           images: [],
+//         });
+//         if (data.images && Array.isArray(data.images)) {
+//           setExistingImages(data.images.map(img =>
+//             img.replace('/images/', '')
+//           ));
+//           setImagePreviews(
+//             data.images.map(img =>
+//               img.startsWith("http")
+//                 ? img
+//                 : `http://localhost/SFE-Project/backend/public/uploads${img}`
+//             )
+//           );
+//         }
+//         if (data.first_image) {
+//           setExistingFirstImage(data.first_image.replace('/images/', ''));
+//           setFirstImagePreview(`http://localhost/SFE-Project/backend/public/uploads/images/${data.first_image.replace('/images/', '')}`);
+//         }
+//       })
+//       .catch(err => setError(err.message))
+//       .finally(() => setLoading(false));
+//   }, [id]);
+
+//   // Text fields
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData(prev => ({ ...prev, [name]: value }));
+//     setErrors(prev => ({ ...prev, [name]: "" }));
+//   };
+
+//   // File selection
+//   const handleFileChange = (e) => {
+//     const files = Array.from(e.target.files);
+//     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+//     setErrors(prev => ({ ...prev, images: "" }));
+//     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+
+//   };
+
+//   // Drag & drop
+//   const handleDrop = (e) => {
+//     e.preventDefault();
+//     const files = Array.from(e.dataTransfer.files);
+//     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
+//     setErrors(prev => ({ ...prev, images: "" }));
+//     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+//   };
+//   const handleDragOver = (e) => e.preventDefault();
+
+//   // Open file selector
+//   const handleUploadClick = () => {
+//     fileInputRef.current.value = "";
+//     fileInputRef.current.click();
+//   };
+
+//   // Remove an existing image (from DB)
+//   const handleRemoveExistingImage = (idx) => {
+//     setExistingImages(prev => prev.filter((_, i) => i !== idx));
+//     setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+//   };
+
+//   // Remove a newly selected image (not yet uploaded)
+//   const handleRemoveNewImage = (idx) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       images: prev.images.filter((_, i) => i !== idx)
+//     }));
+//     setImagePreviews(prev => {
+//       const existingCount = existingImages.length;
+//       return prev.filter((_, i) => i !== (existingCount + idx));
+//     });
+//   };
+
+//   // Submit
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     let newErrors = {};
+//     if (!formData.title.trim()) newErrors.title = "Titre requis";
+//     if (!formData.description.trim()) newErrors.description = "Description requise";
+//     if (!formData.prix.trim()) newErrors.prix = "prix requis";
+//     if (
+//       !formData.promotion.trim() ||
+//       isNaN(formData.promotion) ||
+//       Number(formData.promotion) < 0 ||
+//       Number(formData.promotion) > 99
+//     ) {
+//       newErrors.promotion = "La promotion doit être comprise entre 0 et 99";
+//     }
+//     if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
+//     setErrors(newErrors);
+//     if (Object.keys(newErrors).length > 0) return;
+
+//     const formDataToSend = new FormData();
+//     if (id) formDataToSend.append("id_galerie", id);
+//     formDataToSend.append("title", formData.title);
+//     formDataToSend.append("description", formData.description);
+//     formDataToSend.append("prix", formData.prix);
+//     formDataToSend.append("promotion", formData.promotion);
+
+//     // Send existing image names as a comma-separated string
+//     if (existingImages.length > 0) {
+//       // alert(existingImages.join(","));
+//       formDataToSend.append("existing_images", existingImages.join(","));
+//     }
+// // alert(formDataToSend['existing_images']);
+//     // Append each new file as images[]
+//     if (formData.images && formData.images.length > 0) {
+//       formData.images.forEach(img => formDataToSend.append("images[]", img));
+//     }
+
+//     if (firstImage) {
+//       formDataToSend.append("first_image", firstImage);
+//     } else if (existingFirstImage) {
+//       formDataToSend.append("existing_first_image", existingFirstImage);
+//     }
+
+//     console.log("existingFirstImage:", existingFirstImage);
+
+//     try {
+//       setLoading(true);
+//       const response = await fetch(API_URL, {
+//         method: "POST",
+//         credentials: "include",
+//         body: formDataToSend,
+//       });
+//       const result = await response.json();
+//       if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
+//       alert(id ? "galerie modifiée !" : "galerie créée !");
+//       navigate("/galerie");
+//     } catch (err) {
+//       setError(err.message);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div style={styles.container}>
+//         <HeaderPart />
+//         <div style={styles.loadingMessage}>Chargement...</div>
+//       </div>
+//     );
+//   }
+//   // alert("existingFirstImage:", existingFirstImage);
+//   return (
+//     <div style={styles.container}>
+//       <HeaderPart />
+//       <div style={styles.formContainer}>
+//         <h1 style={styles.title}>{id ? "Modifier la galerie" : "Ajouter une galerie"}</h1>
+//         {error && <div style={styles.errorMessage}>{error}</div>}
+//         <form onSubmit={handleSubmit} style={styles.form} noValidate>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Titre</label>
+//             <input
+//               type="text"
+//               name="title"
+//               value={formData.title}
+//               onChange={handleChange}
+//               style={styles.input}
+//               required
+//             />
+//             {errors.title && <div style={styles.errorMessage}>{errors.title}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Description</label>
+//             <textarea
+//               name="description"
+//               value={formData.description}
+//               onChange={handleChange}
+//               style={styles.textarea}
+//               required
+//             />
+//             {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>prix</label>
+//             <input
+//               type="text"
+//               name="prix"
+//               value={formData.prix}
+//               onChange={handleChange}
+//               style={styles.input}
+//               required
+//             />
+//             {errors.prix && <div style={styles.errorMessage}>{errors.prix}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>promotion web</label>
+//             <input
+//               type="number"
+//               name="promotion"
+//               value={formData.promotion}
+//               onChange={handleChange}
+//               style={styles.input}
+//               required
+//               min={0}
+//               max={99}
+//             />
+//             {errors.promotion && <div style={styles.errorMessage}>{errors.promotion}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Image principale (motto)</label>
+//             <input
+//               type="file"
+//               accept="image/*"
+//               onChange={e => {
+//                 const file = e.target.files[0];
+//                 setFirstImage(file);
+//                 setFirstImagePreview(file ? URL.createObjectURL(file) : null);
+//                 setErrors(prev => ({ ...prev, first_image: "" }));
+//               }}
+//               style={styles.input}
+//             />
+//             {/* Affiche l'aperçu de la nouvelle image si sélectionnée */}
+//             {firstImagePreview && (
+//               <img
+//                 src={firstImagePreview}
+//                 alt="Aperçu image principale"
+//                 style={{ width: 100, height: 100, objectFit: "cover", marginTop: 8, borderRadius: 8 }}
+//               />
+//             )}
+//             {/* Affiche l'ancienne image si aucune nouvelle sélectionnée */}
+//             {!firstImagePreview && existingFirstImage && ( 
+//               <img
+//                 src={`http://localhost/SFE-Project/backend/public/uploads/images/20250430124619_cd28c9a2.png`}
+//                 alt="Image principale existante"
+//                 style={{ width: 100, height: 100, objectFit: "cover", marginTop: 8, borderRadius: 8 ,zIndex: 1000}}
+//               />
+//             )}
+//             {errors.first_image && <div style={styles.errorMessage}>{errors.first_image}</div>}
+//           </div>
+//           <div style={styles.formGroup}>
+//             <label style={styles.label}>Images</label>
+//             <div
+//               style={styles.uploadBox}
+//               onClick={handleUploadClick}
+//               onDrop={handleDrop}
+//               onDragOver={handleDragOver}
+//             >
+//               <img
+//                 src="/images/cloud_upload.png"
+//                 alt="Upload"
+//                 style={{ width: 60, height: 60, marginBottom: 10 }}
+//               />
+//               <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+//                 Drag & Drop pour télécharger<br />
+//                 <span style={{ color: "#FF4757" }}>ou naviguer</span>
+//               </div>
+//               <div style={{ fontSize: 12, color: "#888" }}>
+//                 JPEG, JPG, PNG.
+//               </div>
+//               <input
+//                 ref={fileInputRef}
+//                 type="file"
+//                 name="images"
+//                 accept="image/*"
+//                 multiple
+//                 style={{ display: "none" }}
+//                 onChange={handleFileChange}
+//               />
+//             </div>
+//             {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
+//             {(existingImages.length > 0 || formData.images.length > 0) && (
+//               <div style={styles.imagePreviewContainer}>
+//                 {/* Existing images */}
+//                 {existingImages.map((img, idx) => (
+//                   <div key={`existing-${idx}`} style={styles.previewWrapper}>
+//                     <img
+//                       src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
+//                       alt={`Aperçu ${idx + 1}`}
+//                       style={styles.imagePreview}
+//                     />
+//                     <span
+//                       style={styles.removeIcon}
+//                       title="Supprimer cette image"
+//                       onClick={e => {
+//                         e.stopPropagation();
+//                         handleRemoveExistingImage(idx);
+//                       }}
+//                     >
+//                       <FaTimes />
+//                     </span>
+//                   </div>
+//                 ))}
+//                 {/* New images */}
+//                 {formData.images.map((file, idx) => (
+//                   <div key={`new-${idx}`} style={styles.previewWrapper}>
+//                     <img
+//                       src={imagePreviews[existingImages.length + idx]}
+//                       alt={`Aperçu nouveau ${idx + 1}`}
+//                       style={styles.imagePreview}
+//                     />
+//                     <span
+//                       style={styles.removeIcon}
+//                       title="Supprimer cette image"
+//                       onClick={e => {
+//                         e.stopPropagation();
+//                         handleRemoveNewImage(idx);
+//                       }}
+//                     >
+//                       <FaTimes />
+//                     </span>
+//                   </div>
+//                 ))}
+//               </div>
+//             )}
+//           </div>
+//           <div style={styles.buttonGroup}>
+//             <button
+//               type="button"
+//               onClick={() => navigate("/galerie")}
+//               style={styles.cancelButton}
+//             >
+//               Annuler
+//             </button>
+//             <button type="submit" style={styles.submitButton}>
+//               {id ? "Mettre à jour" : "Enregistrer"}
+//             </button>
+//           </div>
+//         </form>
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import HeaderPart from "../../components/admin/header";
 import { FaTimes } from "react-icons/fa";
 
 const API_URL = "http://localhost/SFE-Project/backend/public/api/galerie";
+const SERVICES_API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
 export default function GalerieEditPage() {
   const { id } = useParams();
@@ -16,15 +387,25 @@ export default function GalerieEditPage() {
     prix: "",
     promotion: "",
     images: [],
+    id_service: "",
   });
   const [imagePreviews, setImagePreviews] = useState([]);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
-  const [existingImages, setExistingImages] = useState([]); // filenames only
+  const [existingImages, setExistingImages] = useState([]);
   const [firstImage, setFirstImage] = useState(null);
   const [firstImagePreview, setFirstImagePreview] = useState(null);
-  const [existingFirstImage, setExistingFirstImage] = useState(""); // filename string
+  const [existingFirstImage, setExistingFirstImage] = useState("");
+  const [services, setServices] = useState([]);
+
+  // Load services
+  useEffect(() => {
+    fetch(SERVICES_API_URL, { credentials: "include" })
+      .then(res => res.json())
+      .then(data => setServices(Array.isArray(data) ? data : []))
+      .catch(() => setServices([]));
+  }, []);
 
   // Load data if editing
   useEffect(() => {
@@ -40,6 +421,7 @@ export default function GalerieEditPage() {
           prix: data.prix || "",
           promotion: data.promotion || "",
           images: [],
+          id_service: data.id_service || "",
         });
         if (data.images && Array.isArray(data.images)) {
           setExistingImages(data.images.map(img =>
@@ -75,7 +457,6 @@ export default function GalerieEditPage() {
     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
     setErrors(prev => ({ ...prev, images: "" }));
     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
-
   };
 
   // Drag & drop
@@ -118,7 +499,8 @@ export default function GalerieEditPage() {
     let newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Titre requis";
     if (!formData.description.trim()) newErrors.description = "Description requise";
-    if (!formData.prix.trim()) newErrors.prix = "prix requis";
+    if (!formData.prix.trim()) newErrors.prix = "Prix requis";
+    if (!formData.id_service) newErrors.id_service = "Service requis";
     if (
       !formData.promotion.trim() ||
       isNaN(formData.promotion) ||
@@ -137,14 +519,12 @@ export default function GalerieEditPage() {
     formDataToSend.append("description", formData.description);
     formDataToSend.append("prix", formData.prix);
     formDataToSend.append("promotion", formData.promotion);
+    formDataToSend.append("id_service", formData.id_service);
 
-    // Send existing image names as a comma-separated string
     if (existingImages.length > 0) {
-      // alert(existingImages.join(","));
       formDataToSend.append("existing_images", existingImages.join(","));
     }
-// alert(formDataToSend['existing_images']);
-    // Append each new file as images[]
+
     if (formData.images && formData.images.length > 0) {
       formData.images.forEach(img => formDataToSend.append("images[]", img));
     }
@@ -155,8 +535,6 @@ export default function GalerieEditPage() {
       formDataToSend.append("existing_first_image", existingFirstImage);
     }
 
-    console.log("existingFirstImage:", existingFirstImage);
-
     try {
       setLoading(true);
       const response = await fetch(API_URL, {
@@ -166,7 +544,7 @@ export default function GalerieEditPage() {
       });
       const result = await response.json();
       if (!response.ok || result.error) throw new Error(result.error || "Erreur lors de l'enregistrement");
-      alert(id ? "galerie modifiée !" : "galerie créée !");
+      alert(id ? "Galerie modifiée !" : "Galerie créée !");
       navigate("/galerie");
     } catch (err) {
       setError(err.message);
@@ -183,7 +561,7 @@ export default function GalerieEditPage() {
       </div>
     );
   }
-  // alert("existingFirstImage:", existingFirstImage);
+
   return (
     <div style={styles.container}>
       <HeaderPart />
@@ -203,6 +581,7 @@ export default function GalerieEditPage() {
             />
             {errors.title && <div style={styles.errorMessage}>{errors.title}</div>}
           </div>
+
           <div style={styles.formGroup}>
             <label style={styles.label}>Description</label>
             <textarea
@@ -214,8 +593,9 @@ export default function GalerieEditPage() {
             />
             {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
           </div>
+
           <div style={styles.formGroup}>
-            <label style={styles.label}>prix</label>
+            <label style={styles.label}>Prix</label>
             <input
               type="text"
               name="prix"
@@ -226,8 +606,9 @@ export default function GalerieEditPage() {
             />
             {errors.prix && <div style={styles.errorMessage}>{errors.prix}</div>}
           </div>
+
           <div style={styles.formGroup}>
-            <label style={styles.label}>promotion web</label>
+            <label style={styles.label}>Promotion</label>
             <input
               type="number"
               name="promotion"
@@ -240,8 +621,31 @@ export default function GalerieEditPage() {
             />
             {errors.promotion && <div style={styles.errorMessage}>{errors.promotion}</div>}
           </div>
+
+          {/* Nouveau champ Service */}
           <div style={styles.formGroup}>
-            <label style={styles.label}>Image principale (motto)</label>
+            <label style={styles.label}>Service associé</label>
+            <select
+              name="id_service"
+              value={formData.id_service}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            >
+              <option value="">-- Sélectionner un service --</option>
+              {services
+                .filter(service => service.is_active == 1)
+                .map(service => (
+                  <option key={service.service_id} value={service.service_id}>
+                    {service.nom_service}
+                  </option>
+                ))}
+            </select>
+            {errors.id_service && <div style={styles.errorMessage}>{errors.id_service}</div>}
+          </div>
+
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Image principale</label>
             <input
               type="file"
               accept="image/*"
@@ -253,7 +657,6 @@ export default function GalerieEditPage() {
               }}
               style={styles.input}
             />
-            {/* Affiche l'aperçu de la nouvelle image si sélectionnée */}
             {firstImagePreview && (
               <img
                 src={firstImagePreview}
@@ -261,16 +664,15 @@ export default function GalerieEditPage() {
                 style={{ width: 100, height: 100, objectFit: "cover", marginTop: 8, borderRadius: 8 }}
               />
             )}
-            {/* Affiche l'ancienne image si aucune nouvelle sélectionnée */}
-            {!firstImagePreview && existingFirstImage && ( 
+            {!firstImagePreview && existingFirstImage && (
               <img
-                src={`http://localhost/SFE-Project/backend/public/uploads/images/20250430124619_cd28c9a2.png`}
+                src={`http://localhost/SFE-Project/backend/public/uploads/images/${existingFirstImage}`}
                 alt="Image principale existante"
-                style={{ width: 100, height: 100, objectFit: "cover", marginTop: 8, borderRadius: 8 ,zIndex: 1000}}
+                style={{ width: 100, height: 100, objectFit: "cover", marginTop: 8, borderRadius: 8 }}
               />
             )}
-            {errors.first_image && <div style={styles.errorMessage}>{errors.first_image}</div>}
           </div>
+
           <div style={styles.formGroup}>
             <label style={styles.label}>Images</label>
             <div
@@ -304,7 +706,6 @@ export default function GalerieEditPage() {
             {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
             {(existingImages.length > 0 || formData.images.length > 0) && (
               <div style={styles.imagePreviewContainer}>
-                {/* Existing images */}
                 {existingImages.map((img, idx) => (
                   <div key={`existing-${idx}`} style={styles.previewWrapper}>
                     <img
@@ -324,7 +725,6 @@ export default function GalerieEditPage() {
                     </span>
                   </div>
                 ))}
-                {/* New images */}
                 {formData.images.map((file, idx) => (
                   <div key={`new-${idx}`} style={styles.previewWrapper}>
                     <img
@@ -347,6 +747,7 @@ export default function GalerieEditPage() {
               </div>
             )}
           </div>
+
           <div style={styles.buttonGroup}>
             <button
               type="button"
@@ -365,6 +766,7 @@ export default function GalerieEditPage() {
   );
 }
 
+// Les styles restent identiques à votre version originale
 const styles = {
   container: {
     width: "100%",

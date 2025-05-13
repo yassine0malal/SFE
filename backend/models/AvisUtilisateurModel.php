@@ -7,7 +7,10 @@ class AvisUtilisateurModel {
         $this->db = Database::getInstance();
     }
 
-    public function getAll() {
+    public function getAll($query=null) {
+        if ($query !== null) {
+            return $this->db->select($query);
+        }
         return $this->db->select("SELECT * FROM avis_utilisateurs");
     }
 

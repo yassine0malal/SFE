@@ -1,0 +1,25 @@
+/* Make all cards the same height */
+.equal-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+.equal-card .blog-img {
+    flex-shrink: 0;
+}
+.equal-card .blog-text,
+.equal-card .blog-author-more {
+    flex-grow: 1;
+}
+
+.old-price {
+    color: #888;
+    text-decoration: line-through;
+    margin-right: 5px;
+}
+.new-price {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+

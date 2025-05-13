@@ -205,7 +205,7 @@ function textColumn(publication) {
         : '';
 
     return `
-        <div class="col-lg-6 d-flex align-items-center">
+        <div class="col-lg-6 d-flex align-items-center" >
             <div class="bi-blog-text-area headline pera-content w-100">
                 <div class="bi-blog-meta text-uppercase position-relative">
                     <a href="#"><i class="fal fa-calendar-alt"></i> ${publication.nom_service || ''}</a>

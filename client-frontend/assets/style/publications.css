@@ -12,5 +12,18 @@
         max-width: 100%;
     }
 }
+/* Increase spacing between individual filter buttons */
+.bi-portfolio-filter-btn ul.nav-gallery li.filtr-button {
+    margin: 8px 12px !important; /* Horizontal and vertical margin */
+    padding: 10px 20px !important; /* Padding inside buttons */
+}
+
+/* Alternative approach using gap if you have a flex container */
+.bi-portfolio-filter-btn ul.nav-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px; /* Increased gap between buttons */
+}
 
 
