@@ -2,13 +2,30 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderPart from "../../components/admin/header";
 import { FaTimes } from "react-icons/fa";
+import ReactQuill, { Quill } from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 const API_URL = "http://localhost/SFE-Project/backend/public/api/galerie";
 const SERVICES_API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
+const quillModules = {
+  toolbar: {
+    container: [
+      [{ 'header': [1, 2, false] }],
+      ['bold', 'italic', 'underline'],
+      ['link', 'image'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      ['clean'],
+      ['insertHtml'] // Custom HTML insert button
+    ]
+  }
+};
+
 export default function GalerieAjouterPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef();
+  const fileInputRefMain = useRef();
+  const quillRef = useRef();
 
   const [formData, setFormData] = useState({
     title: "",
@@ -18,6 +35,7 @@ export default function GalerieAjouterPage() {
     images: [],
     id_service: "",
   });
+  const [subDescription, setSubDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -33,12 +51,37 @@ export default function GalerieAjouterPage() {
     })
       .then(res => res.json())
       .then(data => {
-        console.log("Services API response:", data); // <-- Ajoute ceci
+        console.log("Services API response:", data);
         setServices(Array.isArray(data) ? data : []);
       })
       .catch(() => setServices([]));
   }, []);
-// alert("serc",JSON.stringify(services))
+
+  useEffect(() => {
+    if (quillRef.current) {
+      const toolbar = quillRef.current.getEditor().getModule('toolbar');
+      // Add custom HTML insert button if not already present
+      if (!document.getElementById('ql-insertHtml')) {
+        const button = document.createElement('button');
+        button.innerHTML = "&lt;/&gt;";
+        button.id = "ql-insertHtml";
+        button.type = "button";
+        button.className = "ql-insertHtml";
+        button.title = "Insérer du code HTML";
+        button.onclick = () => {
+          const html = prompt("Collez votre code HTML ici :");
+          if (html) {
+            const quill = quillRef.current.getEditor();
+            const range = quill.getSelection(true);
+            quill.clipboard.dangerouslyPasteHTML(range.index, html);
+          }
+        };
+        const toolbarElem = quillRef.current.editor.container.previousSibling;
+        toolbarElem.appendChild(button);
+      }
+    }
+  }, []);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -91,6 +134,7 @@ export default function GalerieAjouterPage() {
     formDataToSend.append("promotion", formData.promotion);
     formDataToSend.append("id_service", formData.id_service);
     formDataToSend.append("first_image", firstImage);
+    formDataToSend.append("sub_description", subDescription);
     formData.images.forEach(img => formDataToSend.append("images[]", img));
 
     try {
@@ -189,19 +233,51 @@ export default function GalerieAjouterPage() {
             {errors.id_service && <div style={styles.errorMessage}>{errors.id_service}</div>}
           </div>
           <div style={styles.formGroup}>
-            <label style={styles.label}>Image principale (motto)</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={e => {
-                const file = e.target.files[0];
-                setFirstImage(file);
-                setFirstImagePreview(file ? URL.createObjectURL(file) : null);
-                setErrors(prev => ({ ...prev, first_image: "" }));
-              }}
-              style={styles.input}
-              required
+            <label style={styles.label}>Sous-description personnalisée</label>
+            <ReactQuill
+              ref={quillRef}
+              theme="snow"
+              value={subDescription}
+              onChange={setSubDescription}
+              style={{ background: "#fff", borderRadius: 4 }}
+              modules={quillModules}
             />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Image principale (motto)</label>
+            <div
+              style={styles.uploadBox}
+              onClick={() => {
+                if (fileInputRefMain) fileInputRefMain.current.value = "";
+                fileInputRefMain.current.click();
+              }}
+            >
+              <img
+                src="/images/cloud_upload.png"
+                alt="Upload"
+                style={{ width: 60, height: 60, marginBottom: 10 }}
+              />
+              <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+                Drag & Drop pour télécharger<br />
+                <span style={{ color: "#FF4757" }}>ou naviguer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                JPEG, JPG, PNG.
+              </div>
+              <input
+                ref={fileInputRefMain}
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={e => {
+                  const file = e.target.files[0];
+                  setFirstImage(file);
+                  setFirstImagePreview(file ? URL.createObjectURL(file) : null);
+                  setErrors(prev => ({ ...prev, first_image: "" }));
+                }}
+                required
+              />
+            </div>
             {firstImagePreview && (
               <img
                 src={firstImagePreview}

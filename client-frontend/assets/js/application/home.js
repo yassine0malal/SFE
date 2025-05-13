@@ -82,7 +82,7 @@ injectServices(data.services);
                     </div>
                     <div class="blog-text headline pera-content">
                         <h3><a href="produit-details.html?id_galerie=${gal.id_galerie}">${gal.title}</a></h3>
-                        <p>${gal.description ? gal.description.substring(0, 80) + '...' : ''}</p>
+                        ${gal.sub_description ? gal.sub_description : (gal.description ? `<p>${gal.description.substring(0, 80)}...</p>` : '')}
                     </div>
                     <div class="blog-author-more d-flex justify-content-between align-items-center">
                         <div class="blog-author-more d-flex justify-content-center align-items-center w-100 p-1">

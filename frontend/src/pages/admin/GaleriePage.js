@@ -157,6 +157,19 @@ export default function GalariePage() {
     return (parseFloat(price) - discountAmount).toFixed(2);
   };
 
+  function decodePreEscapedHtml(str) {
+    if (!str) return "";
+    // Detect if it's a <pre class="ql-syntax">...</pre>
+    const match = str.match(/^<pre[^>]*>([\s\S]*)<\/pre>$/i);
+    if (match) {
+      // Unescape HTML entities
+      const txt = document.createElement("textarea");
+      txt.innerHTML = match[1];
+      return txt.value;
+    }
+    return str;
+  }
+
   // Modifier le style de la bannière de promotion
 const promotionBannerStyle = {
   position: "absolute",
@@ -224,35 +237,50 @@ const promotionBannerStyle = {
             </div>
 
             <div style={titleBarStyle}>{publication.title}</div>
-            <div style={subtitleBarStyle}><span style={{color:"#FF5C78"}}> service : </span> {publication.nom_service}</div>
-
-       
+            <div style={subtitleBarStyle}>
+              <span style={{color:"#FF5C78"}}>Service : </span> {publication.nom_service}
+              <span style={{marginLeft: 30, color: "#FF0033", fontWeight: "bold", fontSize: "1.2rem"}}>
+                {publication.promotion > 0 ? (
+                  <>
+                  Prix :&nbsp;
+                    <del style={{color: "#888", marginRight: 8}}>
+                      {parseFloat(publication.prix).toFixed(2)} DH
+                    </del>
+                    <span>
+                      {calculateDiscountedPrice(publication.prix, publication.promotion)} DH
+                    </span>
+                  </>
+                ) : (
+                  <span>Prix :&nbsp;{parseFloat(publication.prix).toFixed(2)} DH</span>
+                )}
+              </span>
+            </div>
 
             <div style={imgSliderStyle}>
-  <button 
-    style={imgArrowBtnStyle("left")} 
-    onClick={prevImg} 
-    disabled={sliderImages.length <= 1}
-  >
-    &lt;
-  </button>
-  
-  <div style={imageContainerStyle}>
-    <img
-      src={`http://localhost/SFE-Project/backend/public/uploads/images/${sliderImages[imgIndex]}`}
-      alt={publication.title}
-      style={imgStyle}
-    />
-  </div>
-  
-  <button 
-    style={imgArrowBtnStyle("right")} 
-    onClick={nextImg} 
-    disabled={sliderImages.length <= 1}
-  >
-    &gt;
-  </button>
-</div>
+              <button 
+                style={imgArrowBtnStyle("left")} 
+                onClick={prevImg} 
+                disabled={sliderImages.length <= 1}
+              >
+                &lt;
+              </button>
+              
+              <div style={imageContainerStyle}>
+                <img
+                  src={`http://localhost/SFE-Project/backend/public/uploads/images/${sliderImages[imgIndex]}`}
+                  alt={publication.title}
+                  style={imgStyle}
+                />
+              </div>
+              
+              <button 
+                style={imgArrowBtnStyle("right")} 
+                onClick={nextImg} 
+                disabled={sliderImages.length <= 1}
+              >
+                &gt;
+              </button>
+            </div>
 
             <div style={dotsRowStyle}>
               {sliderImages.map((_, i) => (
@@ -273,26 +301,13 @@ const promotionBannerStyle = {
                 <div style={descTextStyle}>{publication.description}</div>
               </div>
               <div>
-              <div style={descTitleStyle}>Prix</div>
-                {publication.promotion > 0 ? (
-                  <>
-                    <del>
-                      <span style={{...descTextStyle}}>
-                        {parseFloat(publication.prix).toFixed(2)} DH
-                      </span>
-                    </del> 
-                    <div style={prixsyle}>
-                      {calculateDiscountedPrice(publication.prix, publication.promotion)} DH
-                    </div>
-                  </>
-                ) : (
-                  <div style={prixsyle}>
-                    {parseFloat(publication.prix).toFixed(2)} DH
-                  </div>
-                )}
+                <div style={descTitleStyle}>Sous-description personnalisée</div>
+                <div
+                  style={{...descTextStyle, maxWidth: 400, overflowWrap: "break-word"}}
+                  dangerouslySetInnerHTML={{ __html: decodePreEscapedHtml(publication.sub_description || "") }}
+                />
               </div>
             </div>
-
             
           </div>
           

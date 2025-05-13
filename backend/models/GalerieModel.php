@@ -32,7 +32,7 @@ class GalerieModel {
         return $this->db->selectOne("SELECT g.* ,s.nom_service FROM galeries g LEFT JOIN services s ON s.service_id = g.id_service WHERE id_galerie = ?", [$id_galerie]);
     }
 
-    public function create($title, $description, $prix, $promotion, $images, $id_service, $first_image) {
+    public function create($title, $description, $prix, $promotion, $images, $id_service, $first_image,$sous_description) {
         return $this->db->insert('galeries', [
             'title' => $title,
             'description' => $description,
@@ -40,11 +40,12 @@ class GalerieModel {
             'promotion' => $promotion,
             'images' => $images,
             'id_service' => $id_service,
-            'first_image' => $first_image // <-- add this
+            'first_image' => $first_image,
+            'sub_description'=>$sous_description
         ]);
     }
 
-    public function update($id_galerie, $title, $description, $prix, $promotion, $images, $id_service, $first_image) {
+    public function update($id_galerie, $title, $description, $prix, $promotion, $images, $id_service, $first_image,$sous_description) {
         return $this->db->update(
             'galeries',
             [
@@ -54,7 +55,8 @@ class GalerieModel {
                 'promotion' => $promotion,
                 'images' => $images,
                 'id_service' => $id_service,
-                'first_image' => $first_image // <-- add this
+                'first_image' => $first_image,
+                'sub_description' => $sous_description
             ],
             'id_galerie = ?',
             [$id_galerie]

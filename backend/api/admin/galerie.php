@@ -48,6 +48,7 @@ switch ($method) {
                     'id_service' => $galerie['id_service'],
                     'promotion' => $galerie['promotion'],
                     'nom_service' => $galerie['nom_service'],
+                    'sub_description' => $galerie['sub_description'] // <-- Ajoute cette ligne
                 ];
                 echo json_encode($result);
             } else {
@@ -69,6 +70,7 @@ switch ($method) {
                     'id_service' => $gal['id_service'],
                     'promotion' => $gal['promotion'],
                     'nom_service' => $gal['nom_service'],
+                    'sub_description' => $gal['sub_description'] // <-- Ajoute cette ligne
                 ];
             }, $galeries);
             echo json_encode($result);
@@ -172,8 +174,9 @@ switch ($method) {
                 $_POST['prix'] ?? $galerie['prix'],
                 $_POST['promotion'] ?? $galerie['promotion'],
                 implode(',', $imageNames),
-                $_POST['id_service'] ?? $galerie['id_service '],
-                $firstImageName
+                $_POST['id_service'] ?? $galerie['id_service'],
+                $firstImageName,
+                $_POST['sub_description'] ?? $galerie['sub_description'] // <-- Ajoute cette ligne
             );
             
 
@@ -245,7 +248,8 @@ switch ($method) {
                     $_POST['promotion'],
                     implode(',', $imageNames),
                     $_POST['id_service'],
-                    $firstImageName
+                    $firstImageName,
+                    $_POST['sub_description'] ?? null // <-- Ajoute cette ligne
                 );
 
                 if ($id) {
