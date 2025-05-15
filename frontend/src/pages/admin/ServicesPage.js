@@ -21,13 +21,16 @@ const ServicesPage = () => {
   const [animating, setAnimating] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
   const navigate = useNavigate();
 
   // Fetch services from API with authentication check
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await fetch(API_URL, { credentials: 'include' });
+        const response = await fetch(API_URL, { credentials: "include" });
         const data = await response.json();
 
         if (data.error === "Non authentifié") {
@@ -36,12 +39,13 @@ const ServicesPage = () => {
         }
 
         if (Array.isArray(data)) {
-          const servicesWithStatus = data.map(service => ({
+          const servicesWithStatus = data.map((service) => ({
             ...service,
-            is_active: service.is_active === '1',
-            className: service.className || 'flaticon-brand'
+            is_active: service.is_active === "1",
+            className: service.className || "flaticon-brand",
           }));
           setServices(servicesWithStatus);
+          alert(JSON.stringify(servicesWithStatus));
         } else {
           setServices([]);
           if (data.error) setError(data.error);
@@ -62,7 +66,7 @@ const ServicesPage = () => {
       const result = await apiCall();
       return result;
     } catch (err) {
-      if (err.message.includes('Non authentifié')) {
+      if (err.message.includes("Non authentifié")) {
         window.location.href = "/login";
         return null;
       }
@@ -77,8 +81,8 @@ const ServicesPage = () => {
     try {
       const response = await checkAuthAndProceed(() =>
         fetch(`${API_URL}?service_id=${serviceId}`, {
-          method: 'DELETE',
-          credentials: 'include'
+          method: "DELETE",
+          credentials: "include",
         })
       );
 
@@ -86,74 +90,70 @@ const ServicesPage = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Échec de la suppression');
+        throw new Error(data.error || "Échec de la suppression");
       }
 
-      setServices(prev => prev.filter(s => s.service_id !== serviceId));
-      alert('Service supprimé avec succès');
+      setServices((prev) => prev.filter((s) => s.service_id !== serviceId));
+      alert("Service supprimé avec succès");
     } catch (err) {
       alert(err.message);
     }
   };
 
-  // Toggle active status with authentication check
+  // Replace the existing handleToggleActive function with this:
   const handleToggleActive = async (service) => {
     const newStatus = !service.is_active;
     const originalStatus = service.is_active;
 
     try {
-      setServices(prev =>
-        prev.map(s =>
+      // Optimistically update UI
+      setServices((prev) =>
+        prev.map((s) =>
           s.service_id === service.service_id
             ? { ...s, is_active: newStatus }
             : s
         )
       );
 
-      const response = await checkAuthAndProceed(() =>
-        fetch(API_URL, {
-          method: 'PUT',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            service_id: service.service_id,
-            nom_service: service.nom_service,
-            description: service.description,
-            details: service.details,
-            image: service.image,
-            is_active: newStatus ? 1 : 0,
-            className: service.className
-          })
-        })
-      );
+      const formData = new FormData();
+      formData.append("service_id", service.service_id);
+      formData.append("action", "toggle_active");
+      formData.append("is_active", newStatus ? "1" : "0");
 
-      if (!response) return;
+      const response = await fetch(API_URL, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Échec de la mise à jour');
+        throw new Error(data.error || "Échec de la mise à jour");
       }
     } catch (err) {
-      setServices(prev =>
-        prev.map(s =>
+      // Revert UI on error
+      setServices((prev) =>
+        prev.map((s) =>
           s.service_id === service.service_id
             ? { ...s, is_active: originalStatus }
             : s
         )
       );
-      alert('Erreur: ' + err.message);
+      alert("Erreur: " + err.message);
     }
   };
 
   useEffect(() => {
-    setActiveStates(prev => {
+    setActiveStates((prev) => {
       if (services.length === prev.length) return prev;
       return services.map((_, i) => prev[i] ?? true);
     });
 
     if (currentPage > Math.ceil(services.length / CARDS_PER_PAGE) - 1) {
-      setCurrentPage(Math.max(0, Math.ceil(services.length / CARDS_PER_PAGE) - 1));
+      setCurrentPage(
+        Math.max(0, Math.ceil(services.length / CARDS_PER_PAGE) - 1)
+      );
     }
   }, [services, currentPage]);
 
@@ -188,13 +188,13 @@ const ServicesPage = () => {
   };
 
   // Helper for icon label (implement as needed)
-  const getIconLabel = (iconClass) => {
-    // Example: return a label based on iconClass
-    if (!iconClass) return "";
-    if (iconClass === "flaticon-brand") return "Brand";
-    // Add more mappings as needed
-    return iconClass;
-  };
+  // const getIconLabel = (iconClass) => {
+  //   // Example: return a label based on iconClass
+  //   if (!iconClass) return "";
+  //   if (iconClass === "flaticon-brand") return "Brand";
+  //   // Add more mappings as needed
+  //   return iconClass;
+  // };
 
   return (
     <div style={sliderContainerStyle}>
@@ -226,11 +226,16 @@ const ServicesPage = () => {
           Chargement...
         </div>
       ) : error ? (
-        <div style={{ color: 'red', textAlign: 'center' }}>
-          {error}
-        </div>
+        <div style={{ color: "red", textAlign: "center" }}>{error}</div>
       ) : services.length === 0 ? (
-        <div style={{ textAlign: "center", color: "#888", fontSize: 24, margin: 40 }}>
+        <div
+          style={{
+            textAlign: "center",
+            color: "#888",
+            fontSize: 24,
+            margin: 40,
+          }}
+        >
           Aucun service à afficher.
         </div>
       ) : (
@@ -262,7 +267,9 @@ const ServicesPage = () => {
                   style={{
                     ...cardStyle,
                     backgroundColor:
-                      hoveredCard === service.service_id ? "#FF4757" : "#ff5c78",
+                      hoveredCard === service.service_id
+                        ? "#FF4757"
+                        : "#ff5c78",
                     cursor: "pointer",
                     marginRight: "20px",
                     transition: "background 0.3s",
@@ -278,62 +285,160 @@ const ServicesPage = () => {
                         height={120}
                         alt={service.nom_service}
                         style={{
-                          maxWidth: '100%',
-                          height: 'auto',
-                          objectFit: 'cover',
-                          borderRadius: '8px',
+                          maxWidth: "100%",
+                          height: "auto",
+                          objectFit: "cover",
+                          borderRadius: "8px",
                           onError: (e) => {
                             e.target.onerror = null;
-                            e.target.src = 'http://localhost/SFE-Project/backend/public/assets/placeholder.png';
-                          }
+                            e.target.src =
+                              "http://localhost/SFE-Project/backend/public/assets/placeholder.png";
+                          },
                         }}
                       />
                     </div>
-                    <h2 style={{ fontSize: "16px", margin: "10px 0", textAlign: "center" }}>
+                    <h2
+                      style={{
+                        fontSize: "16px",
+                        margin: "10px 0",
+                        textAlign: "center",
+                      }}
+                    >
                       {service.nom_service}
                     </h2>
                     <p style={{ fontSize: "12px", textAlign: "start" }}>
                       {service.description}
                     </p>
                     <h4 style={{ marginTop: "15px" }}>Détails</h4>
-                    <p style={{ fontSize: "11px", textAlign: "start" }}>{service.details}</p>
-                    {/* Display className field */}
-                    <div style={{
-                      margin: "10px 0",
-                      fontSize: "12px",
-                      color: "#fff",
-                      textAlign: "center",
-                      fontWeight: "bold"
-                    }}>
-                      {/* <span>Classe d'icône : {service.className}</span> */}
-                    </div>
-                    {/* Icon display section */}
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "8px",
-                      margin: "10px 0",
-                      padding: "5px",
-                      backgroundColor: "rgba(255, 255, 255, 0.1)",
-                      borderRadius: "4px"
-                    }}>
-                      <i className={service.className} style={{
-                        fontSize: "20px",
-                        color: "#fff"
-                      }}></i>
-                      <span style={{
-                        fontSize: "12px",
-                        fontWeight: "bold"
+                    <p style={{ fontSize: "11px", textAlign: "start" }}>
+                      {service.details}
+                    </p>
+                    {/* Sous-services section */}
+                    {service.sous_services && (
+                      <div style={{
+                        margin: "15px 0",
+                        padding: "10px",
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        borderRadius: "8px"
                       }}>
-                        Classe d'icône :{(service.className)}
-                      </span>
+                        <h4 style={{ marginBottom: "10px", color: "white" }}>Sous-services</h4>
+                        <div style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "8px"
+                        }}>
+                          {service.sous_services.split('|').map((sousService, idx) => {
+                            const [title, description, icon] = sousService.split(':');
+                            if (!title) return null;
+                            
+                            return (
+                              <div key={idx} style={{
+                                padding: "8px",
+                                backgroundColor: "rgba(255, 255, 255, 0.05)",
+                                borderRadius: "4px",
+                                textAlign: "left"
+                              }}>
+                                <div style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  marginBottom: "4px"
+                                }}>
+                                  <span style={{ 
+                                    fontSize: "12px", 
+                                    color: "rgba(255, 255, 255, 0.7)"
+                                  }}>
+                                    {icon}
+                                  </span>
+                                  <strong style={{ fontSize: "14px" }}>{title}</strong>
+                                </div>
+                                <p style={{ 
+                                  fontSize: "12px",
+                                  margin: "0",
+                                  color: "rgba(255, 255, 255, 0.8)"
+                                }}>
+                                  {description}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    {/* Display className field */}
+                    <div
+                      style={{
+                        margin: "10px 0",
+                        fontSize: "12px",
+                        color: "#fff",
+                        textAlign: "center",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {/* Icon display section */}
+                      <div
+                        style={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          margin: "10px 0",
+                          padding: "5px",
+                          backgroundColor: "rgba(255, 255, 255, 0.1)",
+                          borderRadius: "4px",
+                          margin: "10px 0",
+                          fontSize: "12px",
+                          color: "#fff",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        <span>Les Images de Service:</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "center",
+                            gap: "5px",
+                            marginTop: "5px",
+                          }}
+                        >
+                          {service.images &&
+                            service.images
+                              .split(",")
+                              .map((imageName, imgIndex) => (
+                                <img
+                                  key={imgIndex}
+                                  src={`http://localhost/SFE-Project/backend/public/uploads/images/${imageName.trim()}`}
+                                  alt={`${service.nom_service} image ${imgIndex + 1}`}
+                                  style={{
+                                    width: "50px",
+                                    height: "50px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                    border: "1px solid rgba(255,255,255,0.3)",
+                                    cursor: "pointer", // Ajouter un curseur pointer pour indiquer que c'est cliquable
+                                  }}
+                                  onClick={() => {
+                                    setSelectedImage(imageName.trim());
+                                    setShowImageModal(true);
+                                  }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src =
+                                      "http://localhost/SFE-Project/backend/public/assets/placeholder.png";
+                                  }}
+                                />
+                              ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div style={buttonContainerStyle}>
                     <button
                       style={buttonStyle}
-                      onClick={() => navigate(`/services/editer/${service.service_id}`)}
+                      onClick={() =>
+                        navigate(`/services/editer/${service.service_id}`)
+                      }
                     >
                       <FaEdit />
                     </button>
@@ -364,7 +469,14 @@ const ServicesPage = () => {
           >
             <FaChevronRight />
           </button>
-          <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "20px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "8px",
+              marginTop: "20px",
+            }}
+          >
             {Array.from({ length: pageCount }).map((_, i) => (
               <span
                 key={i}
@@ -381,9 +493,80 @@ const ServicesPage = () => {
           </div>
         </>
       )}
+
+      {/* Modal pour afficher l'image en grand */}
+      {showImageModal && selectedImage && (
+  <div 
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: "rgba(0,0,0,0.8)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 2000,
+    }}
+    onClick={() => setShowImageModal(false)} // Ferme le modal quand on clique sur l'arrière-plan
+  >
+    <div 
+      style={{
+        position: "relative",
+        maxWidth: "90vw",
+        maxHeight: "90vh",
+      }}
+      onClick={(e) => e.stopPropagation()} // Empêche la fermeture quand on clique sur le conteneur de l'image
+    >
+      <img
+        src={`http://localhost/SFE-Project/backend/public/uploads/images/${selectedImage}`}
+        alt="Image agrandie"
+        style={{
+          maxWidth: "100%",
+          maxHeight: "90vh",
+          objectFit: "contain",
+          borderRadius: "8px",
+          boxShadow: "0 4px 8px rgba(0,0,0,0.5)"
+        }}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = 'http://localhost/SFE-Project/backend/public/assets/placeholder.png';
+        }}
+      />
+      {/* Vous pouvez garder ou supprimer ce bouton, selon votre préférence */}
+      <button
+        onClick={() => setShowImageModal(false)}
+        style={{
+          position: "absolute",
+          top: "-20px",
+          right: "-20px",
+          backgroundColor: "#FF4757",
+          color: "white",
+          border: "none",
+          borderRadius: "50%",
+          width: "40px",
+          height: "40px",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          cursor: "pointer",
+          fontSize: "20px",
+          boxShadow: "0 2px 5px rgba(0,0,0,0.3)"
+        }}
+      >
+        ×
+      </button>
+    </div>
+  </div>
+      )}
     </div>
   );
 };
+
+
+
+
 
 // Styles remain the same
 const sliderContainerStyle = {

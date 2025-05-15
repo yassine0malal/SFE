@@ -16,11 +16,12 @@ const iconOptions = [
   { value: "flaticon-code", label: "Programming" },
   { value: "flaticon-web-design", label: "Web Design" }
 ];
-
+var index= 0;
 export default function ServiceEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
+  const [tempSousServicesCount, setTempSousServicesCount] = useState(0);
 
   // Main form state
   const [formData, setFormData] = useState({
@@ -62,7 +63,7 @@ export default function ServiceEditPage() {
           if (data.error) throw new Error(data.error);
           const service = data;
 
-          alert(JSON.stringify(service));
+          // alert(JSON.stringify(service));
           if (service) {
             setFormData({
               nom_service: service.nom_service,
@@ -119,6 +120,7 @@ export default function ServiceEditPage() {
 
   // Handlers
   const handleChange = (e) => {
+    index++;
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -128,6 +130,7 @@ export default function ServiceEditPage() {
   };
 
   const handleSousServiceChange = (idx, field, value) => {
+    index++;
     setSousServices(prev => {
       const updated = [...prev];
       updated[idx][field] = value;
@@ -137,6 +140,7 @@ export default function ServiceEditPage() {
 
   // Main image
   const handleMainImageChange = (e) => {
+    index++;
     const file = e.target.files[0];
     setMainImage(file);
     setMainImagePreview(file ? URL.createObjectURL(file) : null);
@@ -145,27 +149,32 @@ export default function ServiceEditPage() {
 
   // Multiple images
   const handleFileChange = (e) => {
+    index++;
     const files = Array.from(e.target.files);
     setImages(prev => [...prev, ...files]);
     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
   };
 
   const handleUploadClick = () => {
+    index++;
     fileInputRef.current.value = "";
     fileInputRef.current.click();
   };
 
   const handleRemoveNewImage = (idx) => {
+    index++;
     setImages(prev => prev.filter((_, i) => i !== idx));
     setImagePreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleRemoveExistingImage = (imgName) => {
+    index++;
     setExistingImages(prev => prev.filter(img => img !== imgName));
   };
 
   // Build sous_services string for backend
   const buildSousServicesString = () => {
+    index++;
     return sousServices
       .filter(s => s.title.trim() !== "")
       .map(s => `${s.title.trim()}:${s.description.trim()}:${s.icon}`)
@@ -175,54 +184,104 @@ export default function ServiceEditPage() {
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if(index === 0){
+      navigate("/services");
+      return;
+    }
+    
+    // Basic validation - only check if we have either existing or new data
     let newErrors = {};
-    if (!formData.nom_service.trim()) newErrors.nom_service = "Nom du service requis";
-    if (!formData.description.trim()) newErrors.description = "Description requise";
-    if (!formData.details.trim()) newErrors.details = "Détails requis";
-    if (!mainImage && !existingMainImage) newErrors.main_image = "Image principale requise";
-    if (images.length + existingImages.length < 1) newErrors.images = "Au moins une image requise";
+    
+    // For text fields - they should have either new input or existing data
+    if (!formData.nom_service?.trim()) {
+        newErrors.nom_service = "Nom du service requis";
+    }
+    if (!formData.description?.trim()) {
+        newErrors.description = "Description requise";
+    }
+    if (!formData.details?.trim()) {
+        newErrors.details = "Détails requis";
+    }
 
-    const sousServicesRemplis = sousServices.filter(s => s.title.trim() !== "" || s.description.trim() !== "");
-    if (sousServicesRemplis.length > 0 && sousServicesRemplis.length < sousServicesCount) {
-      newErrors.sous_services = "Veuillez remplir tous les sous-services ou aucun.";
+    // For images - either existing or new ones should be present
+    if (!mainImage && !existingMainImage) {
+        newErrors.main_image = "Image principale requise";
+    }
+    
+    // For gallery images - check both existing and new
+    const totalImages = images.length + existingImages.length;
+    if (totalImages < 1) {
+        newErrors.images = "Au moins une image requise";
+    }
+
+    // For sous-services - validate only if there are any
+    if (sousServicesCount > 0) {
+        const sousServicesRemplis = sousServices.filter(s => 
+            s.title.trim() !== "" || s.description.trim() !== ""
+        );
+        if (sousServicesRemplis.length < sousServicesCount) {
+            newErrors.sous_services = "Veuillez remplir tous les sous-services ou aucun.";
+        }
     }
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
     try {
-      let formDataToSend = new FormData();
-      formDataToSend.append("service_id", id);
-      formDataToSend.append("nom_service", formData.nom_service);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("details", formData.details);
-      formDataToSend.append("is_active", formData.is_active ? "1" : "0");
-      formDataToSend.append("sous_services", buildSousServicesString());
+        const formDataToSend = new FormData();
+        
+        // Always send all data
+        formDataToSend.append("service_id", id);
+        formDataToSend.append("nom_service", formData.nom_service);
+        formDataToSend.append("description", formData.description);
+        formDataToSend.append("details", formData.details);
+        formDataToSend.append("is_active", formData.is_active ? "1" : "0");
+        formDataToSend.append("sous_services", buildSousServicesString() || '');
+        formDataToSend.append("existing_main_image", existingMainImage || '');
+        formDataToSend.append("existing_images", existingImages.join(","));
 
-      if (mainImage) formDataToSend.append("main_image", mainImage);
-      else if (existingMainImage) formDataToSend.append("existing_main_image", existingMainImage);
+        // Only append new files if they exist
+        if (mainImage) {
+            formDataToSend.append("main_image", mainImage);
+        }
 
-      formDataToSend.append("existing_images", existingImages.join(","));
+        if (images.length > 0) {
+            images.forEach((img) => {
+                formDataToSend.append("images[]", img);
+            });
+        }
 
-      images.forEach((img) => {
-        formDataToSend.append("images[]", img);
-      });
+        // Debug what's being sent
+        console.log("Sending form data:", {
+            nom_service: formData.nom_service,
+            description: formData.description,
+            details: formData.details,
+            is_active: formData.is_active,
+            existing_main_image: existingMainImage,
+            existing_images: existingImages,
+            has_new_main_image: !!mainImage,
+            new_images_count: images.length
+        });
 
-      const response = await fetch(API_URL, {
-        method: id ? "PUT" : "POST",
-        credentials: 'include',
-        body: formDataToSend
-      });
+        const response = await fetch(API_URL, {
+            method: "POST",
+            credentials: 'include',
+            body: formDataToSend
+        });
 
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || "Une erreur est survenue");
+        const result = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(result.error || "Une erreur est survenue");
+        }
 
-      navigate("/services");
+        navigate("/services");
+        
     } catch (err) {
-      alert("Erreur: " + err.message);
-      console.error("Submission error:", err);
+        alert("Erreur: " + err.message);
+        console.error("Submission error:", err);
     }
-  };
+};
 
   if (loading) {
     return (
@@ -278,65 +337,113 @@ export default function ServiceEditPage() {
             <label style={styles.label}>
               Nombre de sous-services (0 ou plus)
             </label>
-            <input
-              type="number"
-              min={0}
-              value={sousServicesCount}
-              onChange={e => setSousServicesCount(Math.max(0, Number(e.target.value)))}
-              style={{ ...styles.input, width: 120, marginBottom: 12 }}
-            />
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+              <input
+                type="number"
+                min={0}
+                value={tempSousServicesCount}
+                onChange={(e) => setTempSousServicesCount(Math.max(0, parseInt(e.target.value) || 0))}
+                style={{ ...styles.input, marginBottom: 12, flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSousServicesCount(tempSousServicesCount);
+                  index++;
+                }}
+                style={{ 
+                  padding: '12px 24px',
+                  backgroundColor: '#4CAF50',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  marginBottom: 12
+                }}
+              >
+                Mettre à jour
+              </button>
+            </div>
+            
             {sousServices.slice(0, sousServicesCount).map((sous, idx) => (
-              <div key={idx} style={{border: "1px solid #eee", borderRadius: 4, padding: 10, marginBottom: 10}}>
-                <div style={{display: "flex", gap: 10, alignItems: "center"}}>
+              <div
+                key={idx}
+                style={{
+                  border: "1px solid #eee",
+                  borderRadius: 4,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
+              >
+                <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
                   <input
                     type="text"
                     placeholder={`Titre du sous-service ${idx + 1}`}
                     value={sous.title}
-                    onChange={e => handleSousServiceChange(idx, "title", e.target.value)}
-                    style={{...styles.input, flex: 2}}
+                    onChange={(e) =>
+                      handleSousServiceChange(idx, "title", e.target.value)
+                    }
+                    style={{ ...styles.input, flex: 2 }}
                     required={sousServicesCount > 0}
                   />
                   <input
                     type="text"
                     placeholder="Description"
                     value={sous.description}
-                    onChange={e => handleSousServiceChange(idx, "description", e.target.value)}
-                    style={{...styles.input, flex: 3}}
+                    onChange={(e) =>
+                      handleSousServiceChange(
+                        idx,
+                        "description",
+                        e.target.value
+                      )
+                    }
+                    style={{ ...styles.input, flex: 3 }}
                     required={sousServicesCount > 0}
                   />
                   <select
                     value={sous.icon}
-                    onChange={e => handleSousServiceChange(idx, "icon", e.target.value)}
-                    style={{...styles.input, flex: 1}}
+                    onChange={(e) =>
+                      handleSousServiceChange(idx, "icon", e.target.value)
+                    }
+                    style={{ ...styles.input, flex: 1 }}
                   >
-                    {iconOptions.map(option => (
+                    {iconOptions.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
                     ))}
                   </select>
-                  <i className={sous.icon} style={{fontSize: 24, marginLeft: 8}}></i>
+                  <i
+                    className={sous.icon}
+                    style={{ fontSize: 24, marginLeft: 8 }}
+                  ></i>
                 </div>
               </div>
             ))}
-            {errors.sous_services && <div style={styles.errorMessage}>{errors.sous_services}</div>}
+            {errors.sous_services && (
+              <div style={styles.errorMessage}>{errors.sous_services}</div>
+            )}
           </div>
-          {/* Main image */}
+          {/* Main Image Section */}
           <div style={styles.formGroup}>
-            <label style={styles.label}>Image principale <span style={{color: "red"}}>*</span></label>
-            <div style={styles.uploadBox} onClick={() => document.getElementById("mainImageInput").click()}>
+            <label style={styles.label}>
+              Image principale <span style={{ color: "red" }}>*</span>
+            </label>
+            <div
+              style={styles.uploadBox}
+              onClick={() => document.getElementById("mainImageInput").click()}
+            >
               <img
                 src="/images/cloud_upload.png"
                 alt="Upload"
                 style={{ width: 60, height: 60, marginBottom: 10 }}
               />
               <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
-                Drag & Drop pour télécharger<br />
+                Drag & Drop pour télécharger
+                <br />
                 <span style={{ color: "#FF4757" }}>ou naviguer</span>
               </div>
-              <div style={{ fontSize: 12, color: "#888" }}>
-                JPEG, JPG, PNG.
-              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>JPEG, JPG, PNG.</div>
               <input
                 id="mainImageInput"
                 type="file"
@@ -345,10 +452,15 @@ export default function ServiceEditPage() {
                 style={{ display: "none" }}
               />
             </div>
+            {/* Main image preview */}
             {mainImagePreview && (
               <div style={styles.imagePreviewContainer}>
                 <div style={styles.previewWrapper}>
-                  <img src={mainImagePreview} alt="Aperçu principale" style={styles.imagePreview} />
+                  <img
+                    src={mainImagePreview}
+                    alt="Aperçu principale"
+                    style={styles.imagePreview}
+                  />
                   <span
                     style={styles.removeIcon}
                     title="Supprimer cette image"
@@ -374,25 +486,21 @@ export default function ServiceEditPage() {
               </div>
             )}
           </div>
-          {/* Other images */}
+          {/* Images Section (gallery) */}
           <div style={styles.formGroup}>
             <label style={styles.label}>Images</label>
-            <div
-              style={styles.uploadBox}
-              onClick={handleUploadClick}
-            >
+            <div style={styles.uploadBox} onClick={handleUploadClick}>
               <img
                 src="/images/cloud_upload.png"
                 alt="Upload"
                 style={{ width: 60, height: 60, marginBottom: 10 }}
               />
               <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
-                Drag & Drop pour télécharger<br />
+                Drag & Drop pour télécharger
+                <br />
                 <span style={{ color: "#FF4757" }}>ou naviguer</span>
               </div>
-              <div style={{ fontSize: 12, color: "#888" }}>
-                JPEG, JPG, PNG.
-              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>JPEG, JPG, PNG.</div>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -410,13 +518,13 @@ export default function ServiceEditPage() {
                   <div key={img} style={styles.previewWrapper}>
                     <img
                       src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
-                      alt={`Aperçu ${idx + 1}`}
+                      alt={`Aperçu existante ${idx + 1}`}
                       style={styles.imagePreview}
                     />
                     <span
                       style={styles.removeIcon}
                       title="Supprimer cette image"
-                      onClick={e => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveExistingImage(img);
                       }}
@@ -440,7 +548,7 @@ export default function ServiceEditPage() {
                     <span
                       style={styles.removeIcon}
                       title="Supprimer cette image"
-                      onClick={e => {
+                      onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveNewImage(idx);
                       }}
@@ -451,8 +559,12 @@ export default function ServiceEditPage() {
                 ))}
               </div>
             )}
-            {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
+            {errors.images && (
+              <div style={styles.errorMessage}>{errors.images}</div>
+            )}
           </div>
+          {/* Aperçu de toutes les images du service */}
+
           <div style={styles.formGroup}>
             <label style={styles.checkboxLabel}>
               <input
@@ -463,9 +575,7 @@ export default function ServiceEditPage() {
               />
               Service actif
             </label>
-              <span>
-              {formData.is_active ? "Actif" : "Désactivé"}
-            </span>
+            <span>{formData.is_active ? "Actif" : "Désactivé"}</span>
           </div>
           <div style={styles.buttonGroup}>
             <button
