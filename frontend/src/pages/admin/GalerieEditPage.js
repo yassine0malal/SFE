@@ -8,14 +8,15 @@ import "react-quill/dist/quill.snow.css";
 const API_URL = "http://localhost/SFE-Project/backend/public/api/galerie";
 const SERVICES_API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
-const quillModules = {
-  toolbar: {
-    container: "#custom-quill-toolbar"
-  }
+const quillModulesDesc = {
+  toolbar: { container: "#custom-quill-toolbar-desc" }
+};
+const quillModulesSubDesc = {
+  toolbar: { container: "#custom-quill-toolbar-subdesc" }
 };
 
-const CustomToolbar = ({ onInsertHtml }) => (
-  <div id="custom-quill-toolbar">
+const CustomToolbar = ({ id, onInsertHtml }) => (
+  <div id={id}>
     <select className="ql-header" defaultValue="" onChange={e => e.persist()}>
       <option value="1" />
       <option value="2" />
@@ -29,12 +30,11 @@ const CustomToolbar = ({ onInsertHtml }) => (
     <button className="ql-list" value="ordered" />
     <button className="ql-list" value="bullet" />
     <button className="ql-clean" />
-    {/* Your custom HTML button */}
+    {/* Custom HTML button */}
     <button
       type="button"
       style={{
         marginLeft: 8,
-        // border: "1px solid #FF5C78",
         borderRadius: 4,
         background: "#fff",
         color: "#FF5C78",
@@ -57,16 +57,18 @@ export default function GalerieEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef();
-  const quillRef = useRef();
+  const quillRefDesc = useRef();
+  const quillRefSubDesc = useRef();
 
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
     prix: "",
     promotion: "",
     images: [],
     id_service: "",
   });
+  const [descriptionHtml, setDescriptionHtml] = useState("");
+  const [subDescription, setSubDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState([]);
   const [loading, setLoading] = useState(!!id);
   const [error, setError] = useState(null);
@@ -76,8 +78,6 @@ export default function GalerieEditPage() {
   const [firstImagePreview, setFirstImagePreview] = useState(null);
   const [existingFirstImage, setExistingFirstImage] = useState("");
   const [services, setServices] = useState([]);
-  const [subDescription, setSubDescription] = useState("");
-  const [customHtml, setCustomHtml] = useState("");
 
   // Load services
   useEffect(() => {
@@ -97,12 +97,12 @@ export default function GalerieEditPage() {
         if (data.error) throw new Error(data.error);
         setFormData({
           title: data.title || "",
-          description: data.description || "",
           prix: data.prix || "",
           promotion: data.promotion || "",
           images: [],
           id_service: data.id_service || "",
         });
+        setDescriptionHtml(data.description || "");
         setSubDescription(data.sub_description || "");
         if (data.images && Array.isArray(data.images)) {
           setExistingImages(data.images.map(img =>
@@ -179,7 +179,7 @@ export default function GalerieEditPage() {
     e.preventDefault();
     let newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Titre requis";
-    if (!formData.description.trim()) newErrors.description = "Description requise";
+    if (!descriptionHtml.trim()) newErrors.description = "Description requise";
     if (!formData.prix.trim()) newErrors.prix = "Prix requis";
     if (!formData.id_service) newErrors.id_service = "Service requis";
     if (
@@ -197,7 +197,7 @@ export default function GalerieEditPage() {
     const formDataToSend = new FormData();
     if (id) formDataToSend.append("id_galerie", id);
     formDataToSend.append("title", formData.title);
-    formDataToSend.append("description", formData.description);
+    formDataToSend.append("description", descriptionHtml); // Utilise le HTML
     formDataToSend.append("prix", formData.prix);
     formDataToSend.append("promotion", formData.promotion);
     formDataToSend.append("id_service", formData.id_service);
@@ -266,12 +266,24 @@ export default function GalerieEditPage() {
 
           <div style={styles.formGroup}>
             <label style={styles.label}>Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              style={styles.textarea}
-              required
+            <CustomToolbar
+              id="custom-quill-toolbar-desc"
+              onInsertHtml={() => {
+                const html = prompt("Collez votre code HTML ici :");
+                if (html && quillRefDesc.current) {
+                  const quill = quillRefDesc.current.getEditor();
+                  const range = quill.getSelection(true);
+                  quill.clipboard.dangerouslyPasteHTML(range ? range.index : 0, html);
+                }
+              }}
+            />
+            <ReactQuill
+              ref={quillRefDesc}
+              theme="snow"
+              value={descriptionHtml}
+              onChange={setDescriptionHtml}
+              style={{ background: "#fff", borderRadius: 4 }}
+              modules={quillModulesDesc}
             />
             {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
           </div>
@@ -328,37 +340,24 @@ export default function GalerieEditPage() {
           <div style={styles.formGroup}>
             <label style={styles.label}>Sous-description personnalisée</label>
             <CustomToolbar
+              id="custom-quill-toolbar-subdesc"
               onInsertHtml={() => {
                 const html = prompt("Collez votre code HTML ici :");
-                if (html && quillRef.current) {
-                  const quill = quillRef.current.getEditor();
+                if (html && quillRefSubDesc.current) {
+                  const quill = quillRefSubDesc.current.getEditor();
                   const range = quill.getSelection(true);
-                  // Insert the HTML at the cursor position
                   quill.clipboard.dangerouslyPasteHTML(range ? range.index : 0, html);
                 }
               }}
             />
             <ReactQuill
-              ref={quillRef}
+              ref={quillRefSubDesc}
               theme="snow"
               value={subDescription}
               onChange={setSubDescription}
               style={{ background: "#fff", borderRadius: 4 }}
-              modules={quillModules}
+              modules={quillModulesSubDesc}
             />
-            {customHtml && (
-              <div
-                style={{
-                  border: "1px solid #eee",
-                  borderRadius: 8,
-                  padding: 16,
-                  marginTop: 10,
-                  background: "#fafafa",
-                  minHeight: 40,
-                }}
-                dangerouslySetInnerHTML={{ __html: customHtml }}
-              />
-            )}
           </div>
 
           <div style={styles.formGroup}>

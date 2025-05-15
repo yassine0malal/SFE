@@ -296,15 +296,18 @@ const promotionBannerStyle = {
             </div>
 
             <div style={descRowStyle}>
-              <div>
+              <div style={{ maxWidth: 400, overflowWrap: "break-word", wordBreak: "break-word", whiteSpace: "pre-line" }}>
                 <div style={descTitleStyle}>Description Projet</div>
-                <div style={descTextStyle}>{publication.description}</div>
+                <div
+                  style={descTextStyle}
+                  dangerouslySetInnerHTML={{ __html: publication.description || "" }}
+                />
               </div>
-              <div>
+              <div style={{ maxWidth: 400, overflowWrap: "break-word", wordBreak: "break-word", whiteSpace: "pre-line" }}>
                 <div style={descTitleStyle}>Sous-description personnalisée</div>
                 <div
-                  style={{...descTextStyle, maxWidth: 400, overflowWrap: "break-word"}}
-                  dangerouslySetInnerHTML={{ __html: decodePreEscapedHtml(publication.sub_description || "") }}
+                  style={descTextStyle}
+                  dangerouslySetInnerHTML={{ __html: publication.sub_description || "" }}
                 />
               </div>
             </div>

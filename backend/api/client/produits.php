@@ -47,6 +47,7 @@ switch ($method) {
                     'id_service' => $galerie['id_service'],
                     'promotion' => $galerie['promotion'],
                     'nom_service' => $galerie['nom_service'],
+                    'sub_description'=>$galerie['sub_description']
                 ];
                 echo json_encode($result);
             } else {
@@ -68,6 +69,7 @@ switch ($method) {
                     'id_service' => $gal['id_service'],
                     'promotion' => $gal['promotion'],
                     'nom_service' => $gal['nom_service'],
+                    'sub_description'=>$gal['sub_description']
                 ];
             }, $galeries);
             echo json_encode($result);

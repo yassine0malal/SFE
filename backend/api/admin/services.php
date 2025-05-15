@@ -49,6 +49,16 @@ switch ($method) {
                         unlink($imagePath);
                     }
                 }
+                if (!empty($service['images'])) {
+                    $uploadDir = __DIR__ . '/../../public/uploads/images/';
+                    $images = explode(',', $service['images']);
+                    foreach ($images as $image) {
+                        $imagePath = $uploadDir . trim($image);
+                        if (file_exists($imagePath)) {
+                            unlink($imagePath);
+                        }
+                }
+                }
                 // Delete service from database
                 if ($model->delete($_GET['service_id'])) {
                     echo json_encode(['success' => true]);
@@ -67,139 +77,102 @@ switch ($method) {
         break;
 
     case 'POST':
-        if (isset($_POST['service_id'])) {
-            // Update existing service
-            $service_id = $_POST['service_id'];
-            $service = $model->getById($service_id);
-            
-            if (!$service) {
-                http_response_code(404);
-                echo json_encode(['error' => 'Service non trouvé']);
+        $uploadDir = __DIR__ . '/../../public/uploads/images/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true);
+        }
+
+        // --- Gestion des images multiples ---
+        $imageNames = [];
+        if (isset($_FILES['images']) && !empty($_FILES['images']['name'][0])) {
+            foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
+                $validation = validateImage([
+                    'type' => $_FILES['images']['type'][$key],
+                    'size' => $_FILES['images']['size'][$key]
+                ]);
+                if (!$validation['valid']) {
+                    http_response_code(400);
+                    echo json_encode(['error' => $validation['error']]);
+                    exit;
+                }
+                $imageName = generateUniqueImageName($_FILES['images']['name'][$key]);
+                $targetPath = $uploadDir . $imageName;
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    $imageNames[] = $imageName;
+                }
+            }
+        }
+
+        // --- Gestion de l'image principale ---
+        $mainImageName = '';
+        if (isset($_FILES['main_image']) && $_FILES['main_image']['tmp_name']) {
+            $validation = validateImage($_FILES['main_image']);
+            if (!$validation['valid']) {
+                http_response_code(400);
+                echo json_encode(['error' => $validation['error']]);
+                exit;
+            }
+            $mainImageName = generateUniqueImageName($_FILES['main_image']['name']);
+            $targetPath = $uploadDir . $mainImageName;
+            if (!move_uploaded_file($_FILES['main_image']['tmp_name'], $targetPath)) {
+                http_response_code(500);
+                echo json_encode(['error' => "Erreur lors de l'upload de l'image principale"]);
+                exit;
+            }
+        }
+
+        // --- Création du service ---
+        if (isset($_POST['nom_service'], $_POST['description'])) {
+            if (empty($_POST['nom_service']) || empty($_POST['description'])) {
+                http_response_code(400);
+                echo json_encode(['error' => 'Tous les champs sont obligatoires']);
                 break;
             }
 
-            // Check for duplicate name
+            // Check for duplicate service name
             $services = $model->getAll();
             $exists = false;
             foreach ($services as $s) {
-                if (strtolower($s['nom_service']) === strtolower($_POST['nom_service']) && 
-                    $s['service_id'] != $service_id) {
+                if (strtolower($s['nom_service']) === strtolower($_POST['nom_service'])) {
                     $exists = true;
                     break;
                 }
             }
+            
             if ($exists) {
                 http_response_code(409);
-                echo json_encode(['error' => 'Un autre service porte déjà ce nom']);
+                echo json_encode(['error' => 'Ce service existe déjà']);
                 break;
             }
 
-            $imageName = $service['image'];
-            if (isset($_FILES['image'])) {
-                $validation = validateImage($_FILES['image']);
-                if (!$validation['valid']) {
-                    http_response_code(400);
-                    echo json_encode(['error' => $validation['error']]);
-                    break;
-                }
-
-                $uploadDir = __DIR__ . '/../../public/uploads/images/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                if ($imageName && file_exists($uploadDir . $imageName)) {
-                    unlink($uploadDir . $imageName);
-                }
-                $imageName = generateUniqueImageName($_FILES['image']['name']);
-                $targetPath = $uploadDir . $imageName;
-                if (!move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                    http_response_code(500);
-                    echo json_encode(['error' => "Erreur lors de l'upload de l'image"]);
-                    break;
-                }
-            }
-
-            $updated = $model->update(
-                $service_id,
+            $id = $model->create(
                 $_POST['nom_service'],
                 $_POST['description'],
-                $_POST['is_active'],
-                $_POST['details'],
-                $imageName,
-                $_POST['className']
+                $_POST['details'] ?? '',
+                isset($_POST['is_active']) ? (bool)$_POST['is_active'] : true,
+                $mainImageName, // image principale
+                $_POST['sous_services'] ?? '',
+                implode(',', $imageNames) // images multiples
             );
-            echo json_encode(['success' => (bool)$updated]);
-        } else {
-            // Create new service
-            if (isset($_FILES['image']) && isset($_POST['nom_service'], $_POST['description'])) {
-                if (empty($_POST['nom_service']) || empty($_POST['description'])) {
-                    http_response_code(400);
-                    echo json_encode(['error' => 'Tous les champs sont obligatoires']);
-                    break;
-                }
 
-                // Check for duplicate service name
-                $services = $model->getAll();
-                $exists = false;
-                foreach ($services as $s) {
-                    if (strtolower($s['nom_service']) === strtolower($_POST['nom_service'])) {
-                        $exists = true;
-                        break;
-                    }
-                }
-                
-                if ($exists) {
-                    http_response_code(409);
-                    echo json_encode(['error' => 'Ce service existe déjà']);
-                    break;
-                }
-
-                $validation = validateImage($_FILES['image']);
-                if (!$validation['valid']) {
-                    http_response_code(400);
-                    echo json_encode(['error' => $validation['error']]);
-                    break;
-                }
-
-                $uploadDir = __DIR__ . '/../../public/uploads/images/';
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-
-                $imageName = generateUniqueImageName($_FILES['image']['name']);
-                $targetPath = $uploadDir . $imageName;
-
-                if (move_uploaded_file($_FILES['image']['tmp_name'], $targetPath)) {
-                    $id = $model->create(
-                        $_POST['nom_service'],
-                        $_POST['description'],
-                        $_POST['details'] ?? '',
-                        isset($_POST['is_active']) ? (bool)$_POST['is_active'] : true,
-                        $imageName,
-                        $_POST['className'] ?? ''
-                    );
-                    
-                    if ($id) {
-                        echo json_encode([
-                            'success' => true,
-                            'id' => $id,
-                            'message' => 'Service créé avec succès'
-                        ]);
-                    } else {
-                        if (file_exists($targetPath)) {
-                            unlink($targetPath);
-                        }
-                        http_response_code(500);
-                        echo json_encode(['error' => 'Erreur lors de la création du service']);
-                    }
-                } else {
-                    http_response_code(500);
-                    echo json_encode(['error' => "Erreur lors de l'upload de l'image"]);
-                }
+            if ($id) {
+                echo json_encode([
+                    'success' => true,
+                    'id' => $id,
+                    'message' => 'Service créé avec succès'
+                ]);
             } else {
-                http_response_code(400);
-                echo json_encode(['error' => 'Image et informations du service requises']);
+                // Nettoyage si erreur
+                foreach ($imageNames as $img) {
+                    if (file_exists($uploadDir . $img)) unlink($uploadDir . $img);
+                }
+                if ($mainImageName && file_exists($uploadDir . $mainImageName)) unlink($uploadDir . $mainImageName);
+                http_response_code(500);
+                echo json_encode(['error' => 'Erreur lors de la création du service']);
             }
+        } else {
+            http_response_code(400);
+            echo json_encode(['error' => 'Image et informations du service requises']);
         }
         break;
 
@@ -231,7 +204,8 @@ switch ($method) {
                         $data['is_active'],
                         $data['details'],
                         $service['image'],
-                        $data['className'] ?? ''
+                        $data['sous_services'] ?? '',
+                        $data['images']
                     );
                     echo json_encode(['success' => (bool)$updated]);
                 }

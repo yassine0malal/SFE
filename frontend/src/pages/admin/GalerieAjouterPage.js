@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HeaderPart from "../../components/admin/header";
 import { FaTimes } from "react-icons/fa";
-import ReactQuill, { Quill } from "react-quill";
+import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 
 const API_URL = "http://localhost/SFE-Project/backend/public/api/galerie";
@@ -16,7 +16,7 @@ const quillModules = {
       ['link', 'image'],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }],
       ['clean'],
-      ['insertHtml'] // Custom HTML insert button
+      ['insertHtml']
     ]
   }
 };
@@ -25,16 +25,17 @@ export default function GalerieAjouterPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef();
   const fileInputRefMain = useRef();
-  const quillRef = useRef();
+  const quillRefDesc = useRef();
+  const quillRefSubDesc = useRef();
 
   const [formData, setFormData] = useState({
     title: "",
-    description: "",
     prix: "",
     promotion: "",
     images: [],
     id_service: "",
   });
+  const [descriptionHtml, setDescriptionHtml] = useState("");
   const [subDescription, setSubDescription] = useState("");
   const [imagePreviews, setImagePreviews] = useState([]);
   const [errors, setErrors] = useState({});
@@ -45,38 +46,62 @@ export default function GalerieAjouterPage() {
   const [firstImagePreview, setFirstImagePreview] = useState(null);
 
   useEffect(() => {
-    fetch(SERVICES_API_URL,{
+    fetch(SERVICES_API_URL, {
       method: "GET",
       credentials: "include",
     })
       .then(res => res.json())
       .then(data => {
-        console.log("Services API response:", data);
         setServices(Array.isArray(data) ? data : []);
       })
       .catch(() => setServices([]));
   }, []);
 
+  // Ajoute le bouton HTML à la toolbar de description
   useEffect(() => {
-    if (quillRef.current) {
-      const toolbar = quillRef.current.getEditor().getModule('toolbar');
-      // Add custom HTML insert button if not already present
-      if (!document.getElementById('ql-insertHtml')) {
+    if (quillRefDesc.current) {
+      const toolbar = quillRefDesc.current.getEditor().getModule('toolbar');
+      if (!document.getElementById('ql-insertHtml-desc')) {
         const button = document.createElement('button');
         button.innerHTML = "&lt;/&gt;";
-        button.id = "ql-insertHtml";
+        button.id = "ql-insertHtml-desc";
         button.type = "button";
         button.className = "ql-insertHtml";
         button.title = "Insérer du code HTML";
         button.onclick = () => {
           const html = prompt("Collez votre code HTML ici :");
           if (html) {
-            const quill = quillRef.current.getEditor();
+            const quill = quillRefDesc.current.getEditor();
             const range = quill.getSelection(true);
             quill.clipboard.dangerouslyPasteHTML(range.index, html);
           }
         };
-        const toolbarElem = quillRef.current.editor.container.previousSibling;
+        const toolbarElem = quillRefDesc.current.editor.container.previousSibling;
+        toolbarElem.appendChild(button);
+      }
+    }
+  }, []);
+
+  // Ajoute le bouton HTML à la toolbar de sub_description
+  useEffect(() => {
+    if (quillRefSubDesc.current) {
+      const toolbar = quillRefSubDesc.current.getEditor().getModule('toolbar');
+      if (!document.getElementById('ql-insertHtml-subdesc')) {
+        const button = document.createElement('button');
+        button.innerHTML = "&lt;/&gt;";
+        button.id = "ql-insertHtml-subdesc";
+        button.type = "button";
+        button.className = "ql-insertHtml";
+        button.title = "Insérer du code HTML";
+        button.onclick = () => {
+          const html = prompt("Collez votre code HTML ici :");
+          if (html) {
+            const quill = quillRefSubDesc.current.getEditor();
+            const range = quill.getSelection(true);
+            quill.clipboard.dangerouslyPasteHTML(range.index, html);
+          }
+        };
+        const toolbarElem = quillRefSubDesc.current.editor.container.previousSibling;
         toolbarElem.appendChild(button);
       }
     }
@@ -111,7 +136,7 @@ export default function GalerieAjouterPage() {
     e.preventDefault();
     let newErrors = {};
     if (!formData.title.trim()) newErrors.title = "Titre requis";
-    if (!formData.description.trim()) newErrors.description = "Description requise";
+    if (!descriptionHtml.trim()) newErrors.description = "Description requise";
     if (!formData.prix.trim()) newErrors.prix = "prix requis";
     if (
       !formData.promotion.trim() ||
@@ -129,7 +154,7 @@ export default function GalerieAjouterPage() {
 
     const formDataToSend = new FormData();
     formDataToSend.append("title", formData.title);
-    formDataToSend.append("description", formData.description);
+    formDataToSend.append("description", descriptionHtml); // Utilise le HTML
     formDataToSend.append("prix", formData.prix);
     formDataToSend.append("promotion", formData.promotion);
     formDataToSend.append("id_service", formData.id_service);
@@ -176,12 +201,13 @@ export default function GalerieAjouterPage() {
           </div>
           <div style={styles.formGroup}>
             <label style={styles.label}>Description</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              style={styles.textarea}
-              required
+            <ReactQuill
+              ref={quillRefDesc}
+              theme="snow"
+              value={descriptionHtml}
+              onChange={setDescriptionHtml}
+              style={{ background: "#fff", borderRadius: 4 }}
+              modules={quillModules}
             />
             {errors.description && <div style={styles.errorMessage}>{errors.description}</div>}
           </div>
@@ -211,7 +237,6 @@ export default function GalerieAjouterPage() {
             />
             {errors.promotion && <div style={styles.errorMessage}>{errors.promotion}</div>}
           </div>
-
           <div style={styles.formGroup}>
             <label style={styles.label}>Service</label>
             <select
@@ -235,7 +260,7 @@ export default function GalerieAjouterPage() {
           <div style={styles.formGroup}>
             <label style={styles.label}>Sous-description personnalisée</label>
             <ReactQuill
-              ref={quillRef}
+              ref={quillRefSubDesc}
               theme="snow"
               value={subDescription}
               onChange={setSubDescription}

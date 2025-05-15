@@ -26,14 +26,61 @@ function validateImage($file) {
     return ['valid' => true];
 }
 
+/**
+ * Parse a string of the form
+ * "title1:description1|title2:description2|…"
+ * into two arrays: titles et descriptions.
+ */
+function parseSousServices(string $str): array {
+    $titles = [];
+    $descriptions = [];
+    // on vire le dernier '|' éventuel et on split
+    $pairs = array_filter(explode('|', rtrim($str, '|')));
+    foreach ($pairs as $pair) {
+        // ne scinde qu'au premier ':'
+        [$t, $d] = array_pad(explode(':', $pair, 2), 2, '');
+        $titles[] = trim($t);
+        $descriptions[] = trim($d);
+    }
+    return ['titles' => $titles, 'descriptions' => $descriptions];
+}
+
 switch ($method) {
     case 'GET':
         if (isset($_GET['id'])) {
-            $result = $model->getById($_GET['id']);
+            // récupération d'un service
+            $service = $model->getById($_GET['id']);
+            if ($service && !empty($service['sous_services'])) {
+                $parsed = parseSousServices($service['sous_services']);
+                $service['sous_service_titles']       = $parsed['titles'];
+                $service['sous_service_descriptions'] = $parsed['descriptions'];
+            } else {
+                $service['sous_service_titles']       = [];
+                $service['sous_service_descriptions'] = [];
+            }
+            echo json_encode($service);
         } else {
-            $result = $model->getAll("SELECT service_id ,nom_service,description,image,details,className FROM services where is_active = 1 ORDER BY service_id DESC");
+            // récupération de tous les services
+            $rawServices = $model->getAll(
+                "SELECT service_id, nom_service, description, image,
+                        details, sous_services
+                 FROM services
+                 WHERE is_active = 1
+                 ORDER BY service_id DESC"
+            );
+            $services = array_map(function($svc) {
+                if (!empty($svc['sous_services'])) {
+                    $parsed = parseSousServices($svc['sous_services']);
+                    $svc['sous_service_titles']       = $parsed['titles'];
+                    $svc['sous_service_descriptions'] = $parsed['descriptions'];
+                } else {
+                    $svc['sous_service_titles']       = [];
+                    $svc['sous_service_descriptions'] = [];
+                }
+                return $svc;
+            }, $rawServices);
+            echo json_encode($services);
         }
-        echo json_encode($result);
         break;
 
     default:

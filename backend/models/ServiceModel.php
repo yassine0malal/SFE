@@ -15,22 +15,23 @@ class ServiceModel {
     }
 
     public function getById($service_id) {
-        return $this->db->selectOne("SELECT service_id ,nom_service,description,image,details,className FROM services WHERE service_id = ?", [$service_id]);
+        return $this->db->selectOne("SELECT service_id ,nom_service,description,image,details,sous_services,images FROM services WHERE service_id = ?", [$service_id]);
     }
 
-    public function create($nom_service, $description,$details,$is_active, $image, $className) {
+    public function create($nom_service, $description,$details,$is_active, $image, $sous_services,$images) {
         return $this->db->insert('services', [
             'nom_service' => $nom_service,
             'description' => $description,
             'details'=>$details,
             'is_active' => $is_active,
             'image' => $image,
-            'className' => $className
+            'sous_services' => $sous_services,
+            'images'=>$images
 
         ]);
     }
 
-    public function update($service_id, $nom_service, $description,$is_active,$details, $image,$className) {
+    public function update($service_id, $nom_service, $description,$is_active,$details, $image,$sous_services,$images) {
         return $this->db->update(
             'services',
             [
@@ -39,7 +40,9 @@ class ServiceModel {
                 'image' => $image,
                 'details' => $details,
                 'is_active' => $is_active,
-                'className' => $className
+                'details' => $details,
+                'sous_services' => $sous_services,
+                'images' => $images
 
             ],
             'service_id = ?',

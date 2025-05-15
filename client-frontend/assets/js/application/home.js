@@ -82,7 +82,7 @@ injectServices(data.services);
                     </div>
                     <div class="blog-text headline pera-content">
                         <h3><a href="produit-details.html?id_galerie=${gal.id_galerie}">${gal.title}</a></h3>
-                        ${gal.sub_description ? gal.sub_description : (gal.description ? `<p>${gal.description.substring(0, 80)}...</p>` : '')}
+                        <p>${gal.description ? gal.description.substring(0, 80) + '...' : ''}</p>
                     </div>
                     <div class="blog-author-more d-flex justify-content-between align-items-center">
                         <div class="blog-author-more d-flex justify-content-center align-items-center w-100 p-1">
@@ -128,60 +128,69 @@ injectServices(data.services);
     }
 
     function renderCommentaires(avis) {
-    // Make sure the wrapper exists
-    const wrapper = document.querySelector('.bi-testimonial-slider-for-4 .swiper-wrapper, #testimonial-swiper-wrapper');
+    const wrapper = document.querySelector('.hap-testimonial-slider .swiper-wrapper');
     if (!wrapper) return;
+
+    const filteredAvis = avis.filter(a => a.approuve === "1");
+    
+    // Supprimer le contenu existant
     wrapper.innerHTML = '';
 
-    if (!avis || avis.length === 0) {
+    if (filteredAvis.length === 0) {
+        // Cas aucun commentaire
         wrapper.innerHTML = `
             <div class="swiper-slide">
-                <div class="bi-testimonial-item-4 text-center headline pera-content">
-                    <div class="testimonial-author">
-                        <h3 class="text-uppercase">Aucun commentaire</h3>
-                        <span>Pas encore d'avis client</span>
+                <div class="hap-testimonial-item d-flex align-items-center justify-content-center">
+                    <div class="testimoial-img position-relative">
+                        <img src="assets/img/home_5/about/tst1.png" alt="Aucun commentaire">
                     </div>
-                    <div class="testimonial-desc-rate">
-                        <p>“Soyez le premier à laisser un avis !”</p>
-                    </div>
-                </div>
-            </div>
-        `;
-        return;
-    }
-
-    avis.forEach(comment => {
-        wrapper.innerHTML += `
-            <div class="swiper-slide">
-                <div class="bi-testimonial-item-4 text-center headline pera-content">
-                    <div class="testimonial-author">
-                        <h3 class="text-uppercase">${comment.nom_prenom}</h3>
-                        <span>${comment.nom_service || ""}</span>
-                    </div>
-                    <div class="testimonial-desc-rate">
-                        <p>“${comment.message}”</p>
+                    <div class="testimoial-text-author position-relative">
+                        <div class="testimonial-desc">
+                            Aucun commentaire approuvé pour le moment
+                        </div>
+                        <div class="testimonial-author hap-headline">
+                            <h3>Soyez le premier à commenter !</h3>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    });
-
-    // Re-init or update Swiper if needed
-    if (!window.testimonialSwiper) {
-        window.testimonialSwiper = new Swiper('.bi-testimonial-slider-for-4', {
-            navigation: {
-                nextEl: '.testimonial-next_4',
-                prevEl: '.testimonial-prev_4',
-            },
-            loop: true,
-            autoplay: {
-                delay: 3000,
-                disableOnInteraction: false,
-            },
-        });
+            </div>`;
     } else {
-        window.testimonialSwiper.update();
+        // Ajouter tous les commentaires comme slides Swiper
+        filteredAvis.forEach(avis => {
+            let imgSrc = "assets/img/home_5/about/tst1.png";
+            if (avis.sex && avis.sex.toLowerCase() === "female") {
+                imgSrc = "assets/img/home_5/about/tst2.png";
+            }
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.innerHTML = `
+                <div class="hap-testimonial-item d-flex align-items-center justify-content-center">
+                    <div class="testimoial-img position-relative">
+                        <img src="${imgSrc}" alt="${avis.nom_prenom}">
+                    </div>
+                    <div class="testimoial-text-author position-relative">
+                        <div class="testimonial-desc">
+                            ${avis.message}
+                        </div>
+                        <div class="testimonial-author hap-headline">
+                            <h3>${avis.nom_prenom}</h3>
+                        </div>
+                    </div>
+                </div>`;
+            wrapper.appendChild(slide);
+        });
     }
+
+    // Réinitialiser Swiper après l'ajout dynamique
+    const swiper = new Swiper('.hap-testimonial-slider', {
+        slidesPerView: 1,
+        spaceBetween: 30,
+        loop: true,
+        navigation: {
+            nextEl: '.hap-testimonial-button-next',
+            prevEl: '.hap-testimonial-button-prev',
+        },
+    });
 }
 })
 

@@ -1,77 +1,98 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { FaTimes } from "react-icons/fa";
 import HeaderPart from "../../components/admin/header";
 
 const API_URL = "http://localhost/SFE-Project/backend/public/api/services";
 
-export default function ServiceFormPage() {
+// Icon options
+const iconOptions = [
+  { value: "flaticon-brand", label: "Brand" },
+  { value: "flaticon-tablet", label: "Tablet/Mobile" },
+  { value: "flaticon-satellite-dish", label: "Digital Marketing" },
+  { value: "flaticon-laptop", label: "Web Development" },
+  { value: "flaticon-chatting", label: "Website Design" },
+  { value: "flaticon-3d", label: "3D Animation" },
+  { value: "flaticon-code", label: "Programming" },
+  { value: "flaticon-web-design", label: "Web Design" }
+];
+
+export default function ServiceEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = !!id;
+
+  // Main form state
   const [formData, setFormData] = useState({
     nom_service: "",
     description: "",
     details: "",
-    is_active: true,
-    image: null,
-    className: "flaticon-brand" // Default icon class
+    is_active: false,
   });
- 
-  const [imagePreview, setImagePreview] = useState(null);
+
+  // Main image
+  const [mainImage, setMainImage] = useState(null);
+  const [mainImagePreview, setMainImagePreview] = useState(null);
+  const [existingMainImage, setExistingMainImage] = useState(null);
+
+  // Multiple images
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
+
+  // Sous-services
+  const [sousServices, setSousServices] = useState([]);
+  const [sousServicesCount, setSousServicesCount] = useState(0);
+
   const [loading, setLoading] = useState(isEditing);
   const [error, setError] = useState(null);
-  
-  // Define available icon options
-  const iconOptions = [
-    { value: "flaticon-brand", label: "Brand" },
-    { value: "flaticon-tablet", label: "Tablet/Mobile" },
-    { value: "flaticon-satellite-dish", label: "Digital Marketing" },
-    { value: "flaticon-laptop", label: "Web Development" },
-    { value: "flaticon-chatting", label: "Website Design" },
-    { value: "flaticon-3d", label: "3D Animation" },
-    { value: "flaticon-code", label: "Programming" },
-    { value: "flaticon-web-design", label: "Web Design" }
-  ];
-  
-  // Helper function to get label for an icon value
-  const getIconLabel = (iconValue) => {
-    const option = iconOptions.find(opt => opt.value === iconValue);
-    return option ? option.label : "Icon";
-  };
- 
+  const [errors, setErrors] = useState({});
+  const fileInputRef = useRef();
+
+  // Load service data
   useEffect(() => {
     if (isEditing) {
       const fetchServiceData = async () => {
         try {
           setLoading(true);
-          const response = await fetch(`${API_URL}?service_id=${id}`, {
-            credentials: 'include'
-          });
-          
+          const response = await fetch(`${API_URL}?service_id=${id}`, { credentials: 'include' });
           if (!response.ok) throw new Error(`Erreur de récupération du service: ${response.status}`);
-          
           const data = await response.json();
-          if (data.error === "Non authentifié") window.location.href = "/login";
+          
           if (data.error) throw new Error(data.error);
-          const service = Array.isArray(data) ? data[0] : data;
+          const service = data;
+
+          alert(JSON.stringify(service));
           if (service) {
-            console.log("Service data:", service); // Debug log
             setFormData({
               nom_service: service.nom_service,
               description: service.description,
               details: service.details,
-              is_active: service.is_active === 1 || service.is_active === true,
-              image: null,
-              className: service.className || "flaticon-brand" // Set icon class from service data
+              is_active: data.is_active === "1",
             });
+
+            if (service.image) setExistingMainImage(service.image);
             
-            if (service.image) {
-              setImagePreview(`http://localhost/SFE-Project/backend/public/uploads/images/${service.image}`);
+            if (service.images) {
+              const imgs = service.images.split(",").map(s => s.trim()).filter(Boolean);
+              setExistingImages(imgs);
+            }
+
+            if (service.sous_services) {
+              const sousArr = service.sous_services.split("|").filter(Boolean).map(item => {
+                const [title, description, icon] = item.split(/:(?![\\|])/);
+                return {
+                  title: title?.trim() || "",
+                  description: description?.trim() || "",
+                  icon: icon?.trim() || iconOptions[0].value
+                };
+              });
+              setSousServices(sousArr);
+              setSousServicesCount(sousArr.length);
             }
           }
         } catch (err) {
           setError(err.message);
-          alert(`Erreur: ${err.message}`);
         } finally {
           setLoading(false);
         }
@@ -80,59 +101,123 @@ export default function ServiceFormPage() {
     }
   }, [id, isEditing]);
 
-  const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
-    
-    if (type === "file") {
-      const file = files[0];
-      setFormData(prev => ({ ...prev, [name]: file }));
-      
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => setImagePreview(reader.result);
-        reader.readAsDataURL(file);
+  // Sous-services dynamic update
+  useEffect(() => {
+    setSousServices(prev => {
+      const arr = [...prev];
+      if (sousServicesCount > arr.length) {
+        for (let i = arr.length; i < sousServicesCount; i++) {
+          arr.push({ title: "", description: "", icon: iconOptions[0].value });
+        }
+      } else if (sousServicesCount < arr.length) {
+        arr.length = sousServicesCount;
       }
-    } else if (type === "checkbox") {
-      setFormData(prev => ({ ...prev, [name]: checked }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
+      return arr;
+    });
+    // eslint-disable-next-line
+  }, [sousServicesCount]);
+
+  // Handlers
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value
+    }));
+    console.log("formData.is_active =", formData.is_active);
   };
 
+  const handleSousServiceChange = (idx, field, value) => {
+    setSousServices(prev => {
+      const updated = [...prev];
+      updated[idx][field] = value;
+      return updated;
+    });
+  };
+
+  // Main image
+  const handleMainImageChange = (e) => {
+    const file = e.target.files[0];
+    setMainImage(file);
+    setMainImagePreview(file ? URL.createObjectURL(file) : null);
+    setExistingMainImage(null); // Remove preview of old image if new selected
+  };
+
+  // Multiple images
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setImages(prev => [...prev, ...files]);
+    setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current.value = "";
+    fileInputRef.current.click();
+  };
+
+  const handleRemoveNewImage = (idx) => {
+    setImages(prev => prev.filter((_, i) => i !== idx));
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleRemoveExistingImage = (imgName) => {
+    setExistingImages(prev => prev.filter(img => img !== imgName));
+  };
+
+  // Build sous_services string for backend
+  const buildSousServicesString = () => {
+    return sousServices
+      .filter(s => s.title.trim() !== "")
+      .map(s => `${s.title.trim()}:${s.description.trim()}:${s.icon}`)
+      .join("|");
+  };
+
+  // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    let newErrors = {};
+    if (!formData.nom_service.trim()) newErrors.nom_service = "Nom du service requis";
+    if (!formData.description.trim()) newErrors.description = "Description requise";
+    if (!formData.details.trim()) newErrors.details = "Détails requis";
+    if (!mainImage && !existingMainImage) newErrors.main_image = "Image principale requise";
+    if (images.length + existingImages.length < 1) newErrors.images = "Au moins une image requise";
+
+    const sousServicesRemplis = sousServices.filter(s => s.title.trim() !== "" || s.description.trim() !== "");
+    if (sousServicesRemplis.length > 0 && sousServicesRemplis.length < sousServicesCount) {
+      newErrors.sous_services = "Veuillez remplir tous les sous-services ou aucun.";
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     try {
       let formDataToSend = new FormData();
-      
-      if (isEditing) {
-        formDataToSend.append("service_id", id);
-      }
-      
+      formDataToSend.append("service_id", id);
       formDataToSend.append("nom_service", formData.nom_service);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("details", formData.details);
-      formDataToSend.append("is_active", formData.is_active ? 1 : 0);
-      formDataToSend.append("className", formData.className); // Add icon class to form data
-      
-      if (formData.image) {
-        formDataToSend.append("image", formData.image);
-      }
-      const method = isEditing ? "POST" : "POST"; // Always use POST for FormData
-      const url = API_URL + (isEditing ? "" : "");
-      const response = await fetch(url, {
-        method: method,
+      formDataToSend.append("is_active", formData.is_active ? "1" : "0");
+      formDataToSend.append("sous_services", buildSousServicesString());
+
+      if (mainImage) formDataToSend.append("main_image", mainImage);
+      else if (existingMainImage) formDataToSend.append("existing_main_image", existingMainImage);
+
+      formDataToSend.append("existing_images", existingImages.join(","));
+
+      images.forEach((img) => {
+        formDataToSend.append("images[]", img);
+      });
+
+      const response = await fetch(API_URL, {
+        method: id ? "PUT" : "POST",
         credentials: 'include',
         body: formDataToSend
       });
+
       const result = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(result.error || "Une erreur est survenue");
-      }
-      alert(isEditing ? "Service modifié avec succès!" : "Service ajouté avec succès!");
+      if (!response.ok) throw new Error(result.error || "Une erreur est survenue");
+
       navigate("/services");
-    
     } catch (err) {
       alert("Erreur: " + err.message);
       console.error("Submission error:", err);
@@ -153,14 +238,9 @@ export default function ServiceFormPage() {
     <div style={styles.container}>
       <HeaderPart />
       <div style={{ height: "60px" }}></div>
-      
       <div style={styles.formContainer}>
-        <h1 style={styles.title}>
-          {isEditing ? "Modifier le service" : "Ajouter un service"}
-        </h1>
-        
+        <h1 style={styles.title}>Modifier le service</h1>
         {error && <div style={styles.errorMessage}>{error}</div>}
-        
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.formGroup}>
             <label style={styles.label}>Nom du service</label>
@@ -173,7 +253,6 @@ export default function ServiceFormPage() {
               required
             />
           </div>
-          
           <div style={styles.formGroup}>
             <label style={styles.label}>Description</label>
             <textarea
@@ -184,7 +263,6 @@ export default function ServiceFormPage() {
               required
             />
           </div>
-          
           <div style={styles.formGroup}>
             <label style={styles.label}>Détails</label>
             <textarea
@@ -195,34 +273,186 @@ export default function ServiceFormPage() {
               required
             />
           </div>
-          
-          {/* Icon selection with inline preview */}
+          {/* Sous-services */}
           <div style={styles.formGroup}>
-            <label style={styles.label}>Icône du service</label>
-            <div style={styles.iconSelectionContainer}>
-              <select
-                name="className"
-                value={formData.className}
-                onChange={handleChange}
-                style={styles.iconSelect}
-                required
-              >
-                {iconOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {/* <div style={styles.iconPreviewSmall}>
-                <i className={formData.className}></i>
-              </div> */}
-            </div>
-            <div style={styles.iconPreviewContainer}>
-              <i className={formData.className} style={styles.iconPreview}></i>
-              <p style={styles.iconLabel}>{getIconLabel(formData.className)}</p>
-            </div>
+            <label style={styles.label}>
+              Nombre de sous-services (0 ou plus)
+            </label>
+            <input
+              type="number"
+              min={0}
+              value={sousServicesCount}
+              onChange={e => setSousServicesCount(Math.max(0, Number(e.target.value)))}
+              style={{ ...styles.input, width: 120, marginBottom: 12 }}
+            />
+            {sousServices.slice(0, sousServicesCount).map((sous, idx) => (
+              <div key={idx} style={{border: "1px solid #eee", borderRadius: 4, padding: 10, marginBottom: 10}}>
+                <div style={{display: "flex", gap: 10, alignItems: "center"}}>
+                  <input
+                    type="text"
+                    placeholder={`Titre du sous-service ${idx + 1}`}
+                    value={sous.title}
+                    onChange={e => handleSousServiceChange(idx, "title", e.target.value)}
+                    style={{...styles.input, flex: 2}}
+                    required={sousServicesCount > 0}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Description"
+                    value={sous.description}
+                    onChange={e => handleSousServiceChange(idx, "description", e.target.value)}
+                    style={{...styles.input, flex: 3}}
+                    required={sousServicesCount > 0}
+                  />
+                  <select
+                    value={sous.icon}
+                    onChange={e => handleSousServiceChange(idx, "icon", e.target.value)}
+                    style={{...styles.input, flex: 1}}
+                  >
+                    {iconOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <i className={sous.icon} style={{fontSize: 24, marginLeft: 8}}></i>
+                </div>
+              </div>
+            ))}
+            {errors.sous_services && <div style={styles.errorMessage}>{errors.sous_services}</div>}
           </div>
-          
+          {/* Main image */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Image principale <span style={{color: "red"}}>*</span></label>
+            <div style={styles.uploadBox} onClick={() => document.getElementById("mainImageInput").click()}>
+              <img
+                src="/images/cloud_upload.png"
+                alt="Upload"
+                style={{ width: 60, height: 60, marginBottom: 10 }}
+              />
+              <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+                Drag & Drop pour télécharger<br />
+                <span style={{ color: "#FF4757" }}>ou naviguer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                JPEG, JPG, PNG.
+              </div>
+              <input
+                id="mainImageInput"
+                type="file"
+                accept="image/*"
+                onChange={handleMainImageChange}
+                style={{ display: "none" }}
+              />
+            </div>
+            {mainImagePreview && (
+              <div style={styles.imagePreviewContainer}>
+                <div style={styles.previewWrapper}>
+                  <img src={mainImagePreview} alt="Aperçu principale" style={styles.imagePreview} />
+                  <span
+                    style={styles.removeIcon}
+                    title="Supprimer cette image"
+                    onClick={() => {
+                      setMainImage(null);
+                      setMainImagePreview(null);
+                    }}
+                  >
+                    <FaTimes />
+                  </span>
+                </div>
+              </div>
+            )}
+            {!mainImagePreview && existingMainImage && (
+              <div style={styles.imagePreviewContainer}>
+                <div style={styles.previewWrapper}>
+                  <img
+                    src={`http://localhost/SFE-Project/backend/public/uploads/images/${existingMainImage}`}
+                    alt="Aperçu principale"
+                    style={styles.imagePreview}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Other images */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Images</label>
+            <div
+              style={styles.uploadBox}
+              onClick={handleUploadClick}
+            >
+              <img
+                src="/images/cloud_upload.png"
+                alt="Upload"
+                style={{ width: 60, height: 60, marginBottom: 10 }}
+              />
+              <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+                Drag & Drop pour télécharger<br />
+                <span style={{ color: "#FF4757" }}>ou naviguer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                JPEG, JPG, PNG.
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                name="images"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={handleFileChange}
+              />
+            </div>
+            {/* Existing images */}
+            {existingImages.length > 0 && (
+              <div style={styles.imagePreviewContainer}>
+                {existingImages.map((img, idx) => (
+                  <div key={img} style={styles.previewWrapper}>
+                    <img
+                      src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
+                      alt={`Aperçu ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveExistingImage(img);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* New images */}
+            {images.length > 0 && (
+              <div style={styles.imagePreviewContainer}>
+                {images.map((file, idx) => (
+                  <div key={idx} style={styles.previewWrapper}>
+                    <img
+                      src={imagePreviews[idx]}
+                      alt={`Aperçu ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveNewImage(idx);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
+          </div>
           <div style={styles.formGroup}>
             <label style={styles.checkboxLabel}>
               <input
@@ -233,33 +463,10 @@ export default function ServiceFormPage() {
               />
               Service actif
             </label>
+              <span>
+              {formData.is_active ? "Actif" : "Désactivé"}
+            </span>
           </div>
-          
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Image</label>
-            <input
-              type="file"
-              name="image"
-              onChange={handleChange}
-              accept="image/*"
-              style={styles.fileInput}
-              required={!isEditing}
-            />
-            
-            {imagePreview && (
-              <div style={styles.imagePreviewContainer}>
-                <img
-                  src={imagePreview}
-                  alt="Aperçu"
-                  style={styles.imagePreview}
-                />
-                {isEditing && !formData.image && (
-                  <p style={styles.imageNote}>Image actuelle (cliquez sur Parcourir pour changer)</p>
-                )}
-              </div>
-            )}
-          </div>
-          
           <div style={styles.buttonGroup}>
             <button
               type="button"
@@ -269,7 +476,7 @@ export default function ServiceFormPage() {
               Annuler
             </button>
             <button type="submit" style={styles.submitButton}>
-              {isEditing ? "Mettre à jour" : "Ajouter"}
+              Mettre à jour
             </button>
           </div>
         </form>
@@ -277,6 +484,7 @@ export default function ServiceFormPage() {
     </div>
   );
 }
+
 
 // Styles with improved icon selection styling
 const styles = {
@@ -354,13 +562,36 @@ const styles = {
     padding: "10px 0",
   },
   imagePreviewContainer: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap", // This will wrap to the next line if full
     marginTop: "10px",
   },
+  previewWrapper: {
+    position: "relative",
+    display: "inline-block",
+  },
   imagePreview: {
-    maxWidth: "100%",
-    maxHeight: "200px",
+    width: "100px",
+    height: "100px",
+    objectFit: "cover",
     borderRadius: "4px",
     border: "1px solid #ddd",
+  },
+  uploadBox: {
+    border: "2px dashed #FF5C78",
+    borderRadius: 16,
+    background: "#fff",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    marginBottom: 10,
+    textAlign: "center",
+    transition: "border 0.2s",
+    width: "100%",
+    minHeight: 120,
   },
   imageNote: {
     fontSize: "14px",

@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function() {
     // Base URL for images
     const BASE_IMAGE_URL = 'http://localhost/SFE-Project/backend/public/uploads/images/';
@@ -12,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(data => {
             if(data.length > 0) {
-                renderServices(data);
+                renderServicesStyled(data);
             } else {
                 console.log('No services found');
             }
@@ -23,68 +22,87 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Function to render services
-    function renderServices(services) {
-        const container = document.querySelector('.bi-service-feed-content .row');
-        container.innerHTML = ''; // Clear existing content
+    // Function to render services with styled cards
+    function renderServicesStyled(services) {
+    const container = document.getElementById('services-list');
+    if (!container) return;
 
-        services.forEach((service, index) => {
-            // Construct image URL
-            const imagePath = service.image 
-                ? `${BASE_IMAGE_URL}${service.image}`
-                : 'default-image.jpg'; // Fallback image
+    container.innerHTML = ''; // Clear existing content
 
-            const serviceItem = `
-                <div class="col-lg-4 col-md-6">
-                    <div class="bi-service-feed-item position-relative">
-                        <span class="hover_img position-absolute" 
-                               style="background-image: url('${imagePath}')"></span>
-                        <span class="serial-number position-absolute">
-                            ${String(index + 1).padStart(2, '0')}
-                        </span>
-                        <div class="service-icon position-relative">
-                            <i class="${service.className}"></i>
+    services.forEach(service => {
+        const serviceHTML = `
+            <div class="bi-why-choose-us-area-1">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="bi-why-choose-img1-area position-relative">
+                            <div class="why-choose-img1">
+                                <img src="${BASE_IMAGE_URL}${service.image}" alt="${service.nom_service}">
+                            </div>
+                            <div class="why-choose-img2 position-absolute" data-parallax='{"x" : -60}'>
+                                <img src="assets/img/about/whc1.2.png" alt="">
+                            </div>
+                            <div class="why-choose-img3 position-absolute">
+                                <img src="assets/img/about/wh1.5.png" alt="">
+                            </div>
+                            <div class="why-choose-img4 position-absolute"
+                                data-parallax='{"x" : -60, "rotateY":-300}'>
+                                <img src="assets/img/about/wh1.3.png" alt="">
+                            </div>
+                            <div class="why-choose-img5 position-absolute" data-parallax='{"y" : -60}'>
+                                <img src="assets/img/about/wh1.4.png" alt="">
+                            </div>
                         </div>
-                        <div class="service-text headline pera-content">
-                            <h3><a href="service-single.html?id=${service.service_id}">
-                                ${service.nom_service}
-                            </a></h3>
-                            <p>${service.description.substring(0, 150)}...</p>
-                            <a class="read_more" href="service-single.html?id=${service.service_id}">
-                                <i class="fas fa-long-arrow-right"></i>
-                            </a>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="bi-why-choose-textarea">
+                            <div class="bi-why-choose-text_1">
+                                <div class="bi-section-title-4 bins-text headline">
+                                    <div class="sub-title position-relative pera-content text-uppercase wow fadeInRight"
+                                        data-wow-delay="200ms" data-wow-duration="1000ms">
+                                        ${service.nom_service}
+                                    </div>
+                                    <h2 class="tx-split-text split-in-right text-dark" >${service.nom_service.split('.')[0]}</h2>
+                                    <p>${service.description}</p>
+                                </div>
+                                ${service.sous_service_titles?.length ? `
+                                <div class="bi-why-choose-feature ul-li wow fadeInRight" 
+                                    data-wow-delay="300ms" data-wow-duration="1000ms">
+                                    <ul>
+                                        ${service.sous_service_titles.map(title => `
+                                            <li class="text-dark">${title}</li>
+                                        `).join('')}
+                                    </ul>
+                                </div>` : ''}
+                                <div class="bi-btn-4 text-uppercase wow fadeInRight" 
+                                    data-wow-delay="400ms" data-wow-duration="1000ms">
+                                    <a href="service-single.html?id=${service.service_id}">
+                                        Voir le service
+                                        <span class="d-flex justify-content-center align-items-center">
+                                            <img src="assets/img/icon/arrow.svg" alt="">
+                                        </span>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            `;
-            
-            container.insertAdjacentHTML('beforeend', serviceItem);
-        });
+            </div>
+        `;
 
-        // Add image load verification
-        verifyImageLoad();
-    }
+        container.insertAdjacentHTML('beforeend', serviceHTML);
+    });
 
-    // Function to verify image loading
-    function verifyImageLoad() {
-        document.querySelectorAll('.hover_img').forEach(imgElement => {
-            const img = new Image();
-            img.src = imgElement.style.backgroundImage.replace(/url\(['"]?(.*?)['"]?\)/i, "$1");
-            
-            img.onload = () => {
-                imgElement.classList.add('loaded');
-            };
-            
-            img.onerror = () => {
-                imgElement.style.backgroundImage = 'url(default-service-image.jpg)';
-                imgElement.classList.add('loaded');
-            };
-        });
+    // Réinitialiser les animations et effets parallax
+    new WOW().init();
+    if(typeof $.fn.parallax === 'function') {
+        $('[data-parallax]').parallax();
     }
+}
 
     // Function to show error message
     function showError() {
-        const container = document.querySelector('.bi-service-feed-content .row');
+        const container = document.getElementById('services-list');
+        if (!container) return;
         container.innerHTML = `
             <div class="col-12 text-center py-5">
                 <p class="text-danger">Failed to load services. Please refresh the page or try again later.</p>
