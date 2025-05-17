@@ -9,6 +9,8 @@ const SERVICES_API_URL = "http://localhost/SFE-Project/backend/public/api/servic
 export default function PublicationAjouterPage() {
   const navigate = useNavigate();
   const fileInputRef = useRef();
+  const principaleImageinputRef = useRef();
+  const [principaleImagePreview,setPrincipaleImagePreview]= useState(null);
 
   const [services, setServices] = useState([]);
   const [formData, setFormData] = useState({
@@ -17,6 +19,7 @@ export default function PublicationAjouterPage() {
     client: "",
     site: "",
     images: [],
+    principale_image: null,
     id_service: "", // <-- Ajoute ce champ
   });
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -37,11 +40,38 @@ export default function PublicationAjouterPage() {
     setErrors(prev => ({ ...prev, [name]: "" }));
   };
 
+
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setFormData(prev => ({ ...prev, images: [...prev.images, ...files] }));
     setImagePreviews(prev => [...prev, ...files.map(file => URL.createObjectURL(file))]);
   };
+  const handlePrincipaleImageChange = (e)=>{
+    if(e.target.files && e.target.files.length > 0){
+      const file = e.target.files[0];
+      console.log('principale image selected ',file);
+      setFormData(prev =>({...prev,principale_image:file}));
+
+
+      if(principaleImagePreview){
+        URL.revokeObjectURL(principaleImagePreview);
+      }
+
+      setFormData(prev =>{
+        const newFormData = {...prev,principaleImage:file};
+        console.log('updated form data ',newFormData);
+        return newFormData;
+      });
+
+      setPrincipaleImagePreview(URL.createObjectURL(file));
+      setErrors(prev=>({ ...prev,principaleImage:""}));
+    }
+  };
+
+  const handlePrincipaleImageUploadClick  = (e)=>{
+    principaleImageinputRef.current.value = "";
+    principaleImageinputRef.current.click();
+  }
 
   const handleUploadClick = () => {
     fileInputRef.current.value = "";
@@ -55,16 +85,27 @@ export default function PublicationAjouterPage() {
     }));
     setImagePreviews(prev => prev.filter((_, i) => i !== idx));
   };
+  const handleRemovePrinciplaleImage = ()=>{
+    setFormData(prev=>({...prev,principaleImage:null}));
+    if(principaleImagePreview){
+      URL.revokeObjectURL(principaleImagePreview);
+    }
+    setFormData(prev=>({...prev,principaleImage:null}));
+    setPrincipaleImagePreview(null);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     let newErrors = {};
+      console.log("Form data at submission:", formData);
+
     if (!formData.title.trim()) newErrors.title = "Titre requis";
     if (!formData.description.trim()) newErrors.description = "Description requise";
     if (!formData.client.trim()) newErrors.client = "Client requis";
     if (!formData.site.trim()) newErrors.site = "Site requis";
     if (!formData.images || formData.images.length === 0) newErrors.images = "Au moins une image requise";
     if (!formData.id_service) newErrors.id_service = "Service requis";
+    if(!formData.principaleImage) newErrors.principaleImage = "Image principale reqiuse";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -75,6 +116,8 @@ export default function PublicationAjouterPage() {
     formDataToSend.append("site", formData.site);
     formDataToSend.append("id_service", formData.id_service); // <-- Ajoute ce champ
     formData.images.forEach(img => formDataToSend.append("images[]", img));
+    formDataToSend.append("PrincipaleImage",formData.principaleImage);
+    // alert(JSON.stringify(formDataToSend));
 
     try {
       setLoading(true);
@@ -169,6 +212,62 @@ export default function PublicationAjouterPage() {
             {errors.id_service && <div style={styles.errorMessage}>{errors.id_service}</div>}
           </div>
           <div style={styles.formGroup}>
+            <label style={styles.label}>Image Principale</label>
+            <div
+              style={styles.uploadBox}
+              onClick={handlePrincipaleImageUploadClick}
+            >
+              <img
+                src="/images/cloud_upload.png"
+                alt="Upload"
+                style={{ width: 60, height: 60, marginBottom: 10 }}
+              />
+              <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+                Drag & Drop pour télécharger<br />
+                <span style={{ color: "#FF4757" }}>ou naviguer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                JPEG, JPG, PNG, webp.
+              </div>
+              <input
+                ref={principaleImageinputRef}
+                type="file"
+                name="principaleImage"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={handlePrincipaleImageChange}
+              />
+            </div>
+            {errors.principaleImage && <div style={styles.errorMessage}>{errors.principaleImage}</div>}
+            {principaleImagePreview && (
+              <div style={styles.imagePreviewContainer}>
+                {/* {formData.images.map((file, idx) => ( */}
+                  <div style={styles.previewWrapper}>
+                    <img
+                      src={principaleImagePreview}
+                      alt={`image principale`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemovePrinciplaleImage();
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                {/* // ))} */}
+              </div>
+            )}
+          </div>
+
+
+
+          <div style={styles.formGroup}>
             <label style={styles.label}>Images</label>
             <div
               style={styles.uploadBox}
@@ -221,6 +320,7 @@ export default function PublicationAjouterPage() {
               </div>
             )}
           </div>
+
           <div style={styles.buttonGroup}>
             <button
               type="button"

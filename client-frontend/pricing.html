@@ -18,6 +18,8 @@
 	<link rel="stylesheet" href="assets/css/swiper.min.css">
 	<link rel="stylesheet" href="assets/css/magnific-popup.css">
 	<link rel="stylesheet" href="assets/css/style.css">
+	<link rel="stylesheet" href="assets/style/commingSoon.css">
+
 </head>
 <body class="home-1">
 	<div id="preloader"></div>
@@ -808,14 +810,15 @@
 	<footer id="bi-footer" class="bi-footer-section" data-background="assets/img/bg/footer-bg.jpg">
 		<div class="bi-footer-cta position-relative">
 			<div class="container">
-				<div class="bi-footer-cta-content headline d-flex align-items-center  justify-content-between flex-wrap" data-background="assets/img/bg/cta-bg.jpg">
-					<div class="bi-footer-cta-text"> 
-						<h3>Looking for a
-						Design Parner?</h3>
+				<div class="bi-footer-cta-content headline d-flex align-items-center  justify-content-between flex-wrap"
+					data-background="assets/img/user/footer.png">
+					<div class="bi-footer-cta-text bg-black">
+						<h3>Nous sommes là pour vous aider à améliorer vos affaires?</h3>
 					</div>
 					<div class="bi-cta-btn">
 						<div class="bi-btn-1  bi-btn-area text-uppercase">
-							<a class="bi-btn-main  bi-btn-hover bi-btn-item" href="contact.html">  <span></span> Contact Us</a>
+							<a class="bi-btn-main  bi-btn-hover bi-btn-item" href="contact.html"> <span></span> Contact
+								Us</a>
 						</div>
 					</div>
 				</div>
@@ -827,10 +830,18 @@
 					<div class="col-lg-5">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
 							<div class="about-widget">
-								<h3>Working Together
-								Ideas come to life</h3>
+								<h3>Web Design Développement & Communication</h3>
 								<p>
-									No matter how big your company is, as you expand and reach new highs you’ll want an agency to have your back. One with a process
+									Dans un monde numérique en constante évolution, notre agence combine créativité et
+									expertise technique pour propulser votre entreprise vers de nouveaux horizons.
+
+									Notre équipe pluridisciplinaire offre des solutions complètes en design graphique,
+									impression professionnelle, développement web et communication visuelle, adaptées à
+									vos objectifs spécifiques.
+
+									De la conception graphique à l'impression, en passant par la réalisation web, nous
+									vous accompagnons avec une méthodologie éprouvée pour construire une identité
+									visuelle qui vous démarque et stimule votre croissance.
 								</p>
 							</div>
 						</div>
@@ -838,14 +849,14 @@
 					<div class="col-lg-2">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
 							<div class="menu-widget">
-								<h3 class="widget-title">UI Design</h3>
+								<h3 class="widget-title">Navigation</h3>
 								<ul>
-									<li><a href="#">Estimation</a></li>
-									<li><a href="#">Research</a></li>
-									<li><a href="#">Storyboard</a></li>
-									<li><a href="#">User Flow</a></li>
-									<li><a href="#">Information </a></li>
-									<li><a href="#">Storyboard (IA)</a></li>
+									<li><a href="index-4.html">Home</a></li>
+									<li><a href="service.html">Services</a></li>
+									<li><a href="blog-1.html">Réalisations</a></li>
+									<li><a href="blog-2.html">Produits</a></li>
+									<li><a href="about.html">À propos de Nous</a></li>
+									<li><a href="contact.html">Contactez-Nous</a></li>
 								</ul>
 							</div>
 						</div>
@@ -853,29 +864,23 @@
 					<div class="col-lg-3">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
 							<div class="menu-widget">
-								<h3 class="widget-title">Development</h3>
-								<ul>
-									<li><a href="#">Front End (HTML, CSS, React)</a></li>
-									<li><a href="#">Backend (Node.js, MongoDB)</a></li>
-									<li><a href="#">iOS (Swift)</a></li>
-									<li><a href="#">Android (Kotlin, Flutter)</a></li>
-									<li><a href="#">Post Delivery Support</a></li>
+								<h3 class="widget-title"> Services</h3>
+								<ul id="servicesCard">
+									
 								</ul>
 							</div>
 						</div>
 					</div>
 					<div class="col-lg-2">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
-							<div class="menu-widget">
-								<h3 class="widget-title">UI Design</h3>
-								<ul>
-									<li><a href="#">Define Idea</a></li>
-									<li><a href="#">Target Audience</a></li>
-									<li><a href="#">Idea Validation</a></li>
-									<li><a href="#">Customer Value </a></li>
-									<li><a href="#">Build MVP Version</a></li>
-									<li><a href="#">Competitor Reserach</a></li>
-								</ul>
+							<h3 class="widget-title">Abonnez-nous</h3>
+							<div class="footer-subscription-form" style="position: relative; padding: 20px 0;">
+								<form action="/SFE-Project/backend/api/client/abonnees.php" method="post"
+									id="coming-soon-form">
+									<input type="text" name="email" placeholder="E-mail / Tel"
+										required>
+									<button type="submit">Envoyer</button>
+								</form>
 							</div>
 						</div>
 					</div>
@@ -886,11 +891,11 @@
 			<div class="container">
 				<div class="bi-footer-social-content ul-li">
 					<ul>
-						<li><a href="#"><i class="fal fa-basketball-ball"></i> Dribbble </a></li>
-						<li><a href="#"><i class="fab fa-behance-square"></i>  Behance  </a></li>
-						<li><a href="#"><i class="fab fa-linkedin-in"></i> Linked In    </a></li>
-						<li><a href="#"><i class="fab fa-facebook-f"></i> Facebook  </a></li>
-						<li><a href="#"><i class="fab fa-instagram"></i> Instagram  </a></li>
+						<!-- <li><a href="#"><i class="fal fa-basketball-ball"></i> Dribbble </a></li> -->
+						<li><a href="#"><i class="fab fa-linkedin"></i> Linkedin </a></li>
+						<li><a href="#"><i class="fab fa-whatsapp"></i> Whatsapp </a></li>
+						<li><a href="#"><i class="fab fa-facebook-f"></i> Facebook </a></li>
+						<li><a href="#"><i class="fab fa-instagram"></i> Instagram </a></li>
 						<li><a href="#"><i class="fab fa-youtube"></i> Youtube </a></li>
 					</ul>
 				</div>
@@ -900,16 +905,16 @@
 			<div class="container">
 				<div class="bi-footer-logo">
 					<div class="brand-logo text-center">
-						<a href="#"><img src="assets/img/logo/logo2.png" alt=""></a>
+						<a href="#"><img src="assets/img/user/logo-01.png" alt=""></a>
 					</div>
 					<div class="logo-mail text-center headline">
-						<h3><a href="#">email@webs.com</a></h3>
+						<h3><a href="index-4.html">webdesignessaouira@gmail.com</a></h3>
 					</div>
 				</div>
 			</div>
 		</div>
 		<div class="bi-footer-copyright text-center">
-			Copyright 2023 @webagency
+			Copyright 2025 @webdesigndevelopment.com
 		</div>
 	</footer>	
 <!-- End of Footer  section

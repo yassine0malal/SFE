@@ -36,6 +36,11 @@ switch ($method) {
         if (isset($_GET['id_publication'])) {
             $publication = $model->getByIdWithService($_GET['id_publication']);
             if ($publication) {
+                
+                // $table =  array_map(function($img) {
+                //         return '/images/' . trim($img);
+                //     }, explode(',', $publication['images']));
+                // $publication['image_principale']? $table[] = '/images/'.$publication['image_principale']:'';
                 $result = [
                     'id_publication' => $publication['id_publication'],
                     'title' => $publication['title'],
@@ -46,6 +51,7 @@ switch ($method) {
                     'client' => $publication['client'],
                     'site' => $publication['site'],
                     'id_service' => $publication['id_service'],
+                    'image_principale'=>$publication['image_principale'],
                     'nom_service' => $publication['nom_service'], // <-- ici
                 ];
                 echo json_encode($result);
@@ -55,17 +61,23 @@ switch ($method) {
             }
         } else {
             $publications = $model->getAllWithService();
+           
             $result = array_map(function($pub) {
+
+                $images = array_map(function($img){
+                    return '/images/'.trim($img);
+                },explode(',',$pub['images']));
+                $mainImage = '/images/'.trim($pub['image_principale']);
+                $pub['image_principale']?array_unshift($images,$mainImage):'';
                 return [
                     'id_publication' => $pub['id_publication'],
                     'title' => $pub['title'],
-                    'images' => array_map(function($img) {
-                        return '/images/' . trim($img);
-                    }, explode(',', $pub['images'])),
+                    'images' => $images,
                     'description' => $pub['description'],
                     'client' => $pub['client'],
                     'site' => $pub['site'],
                     'id_service' => $pub['id_service'],
+                    'image_principale'=>$pub['image_principale'],
                     'nom_service' => $pub['nom_service'], // <-- ici
                 ];
             }, $publications);
@@ -149,6 +161,7 @@ switch ($method) {
                 $_POST['client'] ?? $publication['client'],
                 $_POST['site'] ?? $publication['site'],
                 implode(',', $imageNames),
+                'dd',
                 $_POST['id_service'] // <-- ajoute ce champ
 
             );
@@ -169,7 +182,7 @@ switch ($method) {
         // Create (no id_publication)
         if (
             isset($_POST['title'], $_POST['description'], $_POST['client'], $_POST['site']) &&
-            isset($_FILES['images'])
+            isset($_FILES['images'])&& isset($_FILES['PrincipaleImage'])
         ) {
             $imageNames = [];
             foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
@@ -189,6 +202,28 @@ switch ($method) {
                 }
             }
 
+
+            if (isset($_FILES['PrincipaleImage']) && $_FILES['PrincipaleImage']['tmp_name']) {
+                $validation = validateImage($_FILES['PrincipaleImage']);
+                if (!$validation['valid']) {
+                    http_response_code(400);
+                    echo json_encode(['error' => $validation['error']]);
+                    exit;
+                }
+                                
+                $mainImageName = generateUniqueImageName($_FILES['PrincipaleImage']['name']);
+                if (!move_uploaded_file($_FILES['PrincipaleImage']['tmp_name'], $uploadDir . $mainImageName)) {
+                    http_response_code(500);
+                    echo json_encode(['error' => "Erreur lors de l'upload de l'image principale"]);
+                    exit;
+                }
+            } else {
+                http_response_code(400);
+                echo json_encode(['error' => '******Image principale requise']);
+                exit;
+            }
+
+
             if (empty($imageNames)) {
                 http_response_code(500);
                 echo json_encode(['error' => "Erreur lors de l'upload des images"]);
@@ -201,6 +236,7 @@ switch ($method) {
                 $_POST['client'],
                 $_POST['site'],
                 implode(',', $imageNames),
+                $mainImageName,
                 $_POST['id_service']
             );
 
@@ -252,7 +288,7 @@ switch ($method) {
             http_response_code(400);
             echo json_encode(['error' => 'ID manquant']);
         }
-        break;  
+    break;  
         
         default:
         http_response_code(405);

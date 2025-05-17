@@ -1,0 +1,29 @@
+@font-face {
+    font-family: "Flaticon";
+    src: url("./Flaticon.eot");
+    src: url("./Flaticon.eot?#iefix") format("embedded-opentype"),
+         url("./Flaticon.woff2") format("woff2"),
+         url("./Flaticon.woff") format("woff"),
+         url("./Flaticon.ttf") format("truetype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+[class^="flaticon-"]:before,
+[class*=" flaticon-"]:before {
+    font-family: Flaticon !important;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.flaticon-digital-marketing:before { content: "\f101"; }
+.flaticon-targeting:before { content: "\f102"; }
+.flaticon-statistics:before { content: "\f103"; }
+.flaticon-analysis:before { content: "\f104"; }
+.flaticon-seo:before { content: "\f105"; }
+/* Add all your icon definitions here */

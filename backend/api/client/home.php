@@ -25,6 +25,7 @@ switch ($method) {
             LEFT JOIN services s ON p.id_service = s.service_id
             WHERE a.approuve = 1
         ");
+        $client =$clientModel->getAll();
         $publications = $publicationModel->getAllWithService();
         $services = $serviceModel->getAll("select * from services where is_active = 1");
         $galeries = $galerieModel->getAll();
@@ -51,7 +52,8 @@ switch ($method) {
             'publications' => $publications,
             'services' => $services,
             'galeries' => $galeries,
-            'clients' => $clients
+            'clients' => $clients,
+            'clients'=>$client
         ]);
         break;
 

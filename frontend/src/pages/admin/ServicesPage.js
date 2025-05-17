@@ -45,7 +45,7 @@ const ServicesPage = () => {
             className: service.className || "flaticon-brand",
           }));
           setServices(servicesWithStatus);
-          alert(JSON.stringify(servicesWithStatus));
+          // alert(JSON.stringify(servicesWithStatus));
         } else {
           setServices([]);
           if (data.error) setError(data.error);
@@ -297,6 +297,61 @@ const ServicesPage = () => {
                         }}
                       />
                     </div>
+                    <div
+                        style={{
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          margin: "10px 0",
+                          padding: "5px",
+                          backgroundColor: "rgba(255, 255, 255, 0.1)",
+                          borderRadius: "4px",
+                          margin: "10px 0",
+                          fontSize: "12px",
+                          color: "#fff",
+                          textAlign: "center",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        <span>Les Images de Service:</span>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "center",
+                            gap: "5px",
+                            marginTop: "5px",
+                          }}
+                        >
+                          {service.images &&
+                            service.images
+                              .split(",")
+                              .map((imageName, imgIndex) => (
+                                <img
+                                  key={imgIndex}
+                                  src={`http://localhost/SFE-Project/backend/public/uploads/images/${imageName.trim()}`}
+                                  alt={`${service.nom_service} image ${imgIndex + 1}`}
+                                  style={{
+                                    width: "50px",
+                                    height: "50px",
+                                    objectFit: "cover",
+                                    borderRadius: "4px",
+                                    border: "1px solid rgba(255,255,255,0.3)",
+                                    cursor: "pointer", // Ajouter un curseur pointer pour indiquer que c'est cliquable
+                                  }}
+                                  onClick={() => {
+                                    setSelectedImage(imageName.trim());
+                                    setShowImageModal(true);
+                                  }}
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src =
+                                      "http://localhost/SFE-Project/backend/public/assets/placeholder.png";
+                                  }}
+                                />
+                              ))}
+                        </div>
+                      </div>
                     <h2
                       style={{
                         fontSize: "16px",
@@ -365,73 +420,8 @@ const ServicesPage = () => {
                         </div>
                       </div>
                     )}
-                    {/* Display className field */}
-                    <div
-                      style={{
-                        margin: "10px 0",
-                        fontSize: "12px",
-                        color: "#fff",
-                        textAlign: "center",
-                        fontWeight: "bold",
-                      }}
-                    >
                       {/* Icon display section */}
-                      <div
-                        style={{
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "8px",
-                          margin: "10px 0",
-                          padding: "5px",
-                          backgroundColor: "rgba(255, 255, 255, 0.1)",
-                          borderRadius: "4px",
-                          margin: "10px 0",
-                          fontSize: "12px",
-                          color: "#fff",
-                          textAlign: "center",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        <span>Les Images de Service:</span>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            justifyContent: "center",
-                            gap: "5px",
-                            marginTop: "5px",
-                          }}
-                        >
-                          {service.images &&
-                            service.images
-                              .split(",")
-                              .map((imageName, imgIndex) => (
-                                <img
-                                  key={imgIndex}
-                                  src={`http://localhost/SFE-Project/backend/public/uploads/images/${imageName.trim()}`}
-                                  alt={`${service.nom_service} image ${imgIndex + 1}`}
-                                  style={{
-                                    width: "50px",
-                                    height: "50px",
-                                    objectFit: "cover",
-                                    borderRadius: "4px",
-                                    border: "1px solid rgba(255,255,255,0.3)",
-                                    cursor: "pointer", // Ajouter un curseur pointer pour indiquer que c'est cliquable
-                                  }}
-                                  onClick={() => {
-                                    setSelectedImage(imageName.trim());
-                                    setShowImageModal(true);
-                                  }}
-                                  onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src =
-                                      "http://localhost/SFE-Project/backend/public/assets/placeholder.png";
-                                  }}
-                                />
-                              ))}
-                        </div>
-                      </div>
-                    </div>
+                      
                   </div>
                   <div style={buttonContainerStyle}>
                     <button
@@ -523,7 +513,7 @@ const ServicesPage = () => {
         src={`http://localhost/SFE-Project/backend/public/uploads/images/${selectedImage}`}
         alt="Image agrandie"
         style={{
-          maxWidth: "100%",
+          maxWidth: "80%",
           maxHeight: "90vh",
           objectFit: "contain",
           borderRadius: "8px",

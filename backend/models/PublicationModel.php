@@ -33,18 +33,19 @@ class PublicationModel {
         return $this->db->selectOne("SELECT * FROM publications WHERE id_publication = ?", [$id_publication]);
     }
 
-    public function create($title, $description, $client, $site, $images,$id_service) {
+    public function create($title, $description, $client, $site, $images,$PrincipaleImage,$id_service) {
         return $this->db->insert('publications', [
             'title' => $title,
             'description' => $description,
             'client' => $client,
             'site' => $site,
             'images' => $images,
+            'image_principale'=>$PrincipaleImage,
             'id_service' => $id_service
         ]);
     }
 
-    public function update($id_publication, $title, $description, $client, $site, $images, $id_service) {
+    public function update($id_publication, $title, $description, $client, $site, $images,$PrincipaleImage, $id_service) {
         $result = $this->db->update(
             'publications',
             [
@@ -53,6 +54,8 @@ class PublicationModel {
                 'client' => $client,
                 'site' => $site,
                 'images' => $images,
+                'image_principale'=>$PrincipaleImage,
+
                 'id_service' => $id_service
             ],
             'id_publication = ?',

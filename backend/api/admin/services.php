@@ -127,8 +127,8 @@ switch ($method) {
             }
 
             // Handle main image
-            if (isset($_FILES['main_image']) && $_FILES['main_image']['tmp_name']) {
-                $validation = validateImage($_FILES['main_image']);
+            if (isset($_FILES['PrincipaleImage']) && $_FILES['PrincipaleImage']['tmp_name']) {
+                $validation = validateImage($_FILES['PrincipaleImage']);
                 if (!$validation['valid']) {
                     http_response_code(400);
                     echo json_encode(['error' => $validation['error']]);
@@ -244,16 +244,16 @@ switch ($method) {
             }
 
 
-            if (isset($_FILES['main_image']) && $_FILES['main_image']['tmp_name']) {
-                $validation = validateImage($_FILES['main_image']);
+            if (isset($_FILES['PrincipaleImage']) && $_FILES['PrincipaleImage']['tmp_name']) {
+                $validation = validateImage($_FILES['PrincipaleImage']);
                 if (!$validation['valid']) {
                     http_response_code(400);
                     echo json_encode(['error' => $validation['error']]);
                     exit;
                 }
                                 
-                $mainImageName = generateUniqueImageName($_FILES['main_image']['name']);
-                if (!move_uploaded_file($_FILES['main_image']['tmp_name'], $uploadDir . $mainImageName)) {
+                $mainImageName = generateUniqueImageName($_FILES['PrincipaleImage']['name']);
+                if (!move_uploaded_file($_FILES['PrincipaleImage']['tmp_name'], $uploadDir . $mainImageName)) {
                     http_response_code(500);
                     echo json_encode(['error' => "Erreur lors de l'upload de l'image principale"]);
                     exit;

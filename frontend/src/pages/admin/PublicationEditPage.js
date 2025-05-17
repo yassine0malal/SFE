@@ -10,6 +10,7 @@ export default function PublicationFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const fileInputRef = useRef();
+  const principaleImageinputRef = useRef()
 
   const [formData, setFormData] = useState({
     title: "",
@@ -18,6 +19,7 @@ export default function PublicationFormPage() {
     site: "",
     images: [],
     id_service: "",
+    principaleImage:null
   });
   const [imagePreviews, setImagePreviews] = useState([]);
   const [loading, setLoading] = useState(!!id);
@@ -25,6 +27,10 @@ export default function PublicationFormPage() {
   const [errors, setErrors] = useState({});
   const [existingImages, setExistingImages] = useState([]); 
   const [services, setServices] = useState([]);
+
+  const [principaleImagePreview,setPrincipaleImagePreview]= useState(null);
+  const [exisitngPrincipaleImage,setExistingPrincipaleImage] = useState(null);
+  
 
   // Load data if editing
   useEffect(() => {
@@ -41,7 +47,14 @@ export default function PublicationFormPage() {
           site: data.site || "",
           images: [],
           id_service: data.id_service || "",
+          principaleImage:null
         });
+
+        if (data.principale_image) {
+          setExistingPrincipaleImage(data.principale_image.replace('/images/',''));
+          setPrincipaleImagePreview(`http://localhost/SFE-Project/backend/public/uploads/images/${data.principale_image.replace('/images/','')}`);
+        }
+
         if (data.images && Array.isArray(data.images)) {
           setExistingImages(data.images.map(img =>
             img.replace('/images/', '')
@@ -82,6 +95,29 @@ export default function PublicationFormPage() {
 
   };
 
+
+  const handlePrincipaleImageChange = (e)=>{
+    if(e.target.files && e.target.files.length > 0){
+      const file = e.target.files[0];
+      console.log('principale image selected ',file);
+      setFormData(prev =>({...prev,principale_image:file}));
+
+
+      if(principaleImagePreview){
+        URL.revokeObjectURL(principaleImagePreview);
+      }
+
+      setFormData(prev =>{
+        const newFormData = {...prev,principaleImage:file};
+        console.log('updated form data ',newFormData);
+        return newFormData;
+      });
+
+      setPrincipaleImagePreview(URL.createObjectURL(file));
+      setErrors(prev=>({ ...prev,principaleImage:""}));
+    }
+  };
+
   // Drag & drop
   const handleDrop = (e) => {
     e.preventDefault();
@@ -97,12 +133,26 @@ export default function PublicationFormPage() {
     fileInputRef.current.value = "";
     fileInputRef.current.click();
   };
+  
+  const handlePrincipaleImageUploadClick  = (e)=>{
+    principaleImageinputRef.current.value = "";
+    principaleImageinputRef.current.click();
+  }
 
   // Remove an existing image (from DB)
   const handleRemoveExistingImage = (idx) => {
     setExistingImages(prev => prev.filter((_, i) => i !== idx));
     setImagePreviews(prev => prev.filter((_, i) => i !== idx));
   };
+
+  const handleRemovePrinciplaleImage = ()=>{
+    setFormData(prev=>({...prev,principaleImage:null}));
+    if(principaleImagePreview){
+      URL.revokeObjectURL(principaleImagePreview);
+    }
+    setFormData(prev=>({...prev,principaleImage:null}));
+    setPrincipaleImagePreview(null);
+  }
 
   // Remove a newly selected image (not yet uploaded)
   const handleRemoveNewImage = (idx) => {
@@ -125,6 +175,7 @@ export default function PublicationFormPage() {
     if (!formData.client.trim()) newErrors.client = "Client requis";
     if (!formData.site.trim()) newErrors.site = "Site requis";
     if (!formData.id_service) newErrors.id_service = "Service requis";
+    if(!formData.principaleImage) newErrors.principaleImage = "Image principale reqiuse";
     if (!id && (!formData.images || formData.images.length === 0)) newErrors.images = "Au moins une image requise";
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
@@ -141,6 +192,7 @@ export default function PublicationFormPage() {
     if (formData.images && formData.images.length > 0) {
       formData.images.forEach(img => formDataToSend.append("images[]", img));
     }
+    formDataToSend.append("PrincipaleImage",formData.principaleImage);
     try {
       setLoading(true);
       const response = await fetch(API_URL, {
@@ -242,6 +294,89 @@ export default function PublicationFormPage() {
             </select>
             {errors.id_service && <div style={styles.errorMessage}>{errors.id_service}</div>}
           </div>
+
+
+{/* IMAGES THAT IS AT PRINCIPALE  */}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Image Principale</label>
+            <div
+              style={styles.uploadBox}
+              onClick={handleUploadClick}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              <img
+                src="/images/cloud_upload.png"
+                alt="Upload"
+                style={{ width: 60, height: 60, marginBottom: 10 }}
+              />
+              <div style={{ color: "#333", fontWeight: "bold", fontSize: 16 }}>
+                Drag & Drop pour télécharger<br />
+                <span style={{ color: "#FF4757" }}>ou naviguer</span>
+              </div>
+              <div style={{ fontSize: 12, color: "#888" }}>
+                JPEG, JPG, PNG.
+              </div>
+              <input
+                ref={principaleImageinputRef}
+                type="file"
+                name="images"
+                accept="image/*"
+                multiple
+                style={{ display: "none" }}
+                onChange={handlePrincipaleImageChange}
+              />
+            </div>
+            {errors.images && <div style={styles.errorMessage}>{errors.images}</div>}
+            {(existingImages.length > 0 || formData.images.length > 0) && (
+              <div style={styles.imagePreviewContainer}>
+                {/* Existing images */}
+                {existingImages.map((img, idx) => (
+                  <div key={`existing-${idx}`} style={styles.previewWrapper}>
+                    <img
+                      src={`http://localhost/SFE-Project/backend/public/uploads/images/${img}`}
+                      alt={`Aperçu ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveExistingImage(idx);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+                {/* New images */}
+                {formData.images.map((file, idx) => (
+                  <div key={`new-${idx}`} style={styles.previewWrapper}>
+                    <img
+                      src={imagePreviews[existingImages.length + idx]}
+                      alt={`Aperçu nouveau ${idx + 1}`}
+                      style={styles.imagePreview}
+                    />
+                    <span
+                      style={styles.removeIcon}
+                      title="Supprimer cette image"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleRemoveNewImage(idx);
+                      }}
+                    >
+                      <FaTimes />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+{/* IMAGES THAT IS AT PRINCIPALE  */}
+
+
+
           <div style={styles.formGroup}>
             <label style={styles.label}>Images</label>
             <div
@@ -318,6 +453,8 @@ export default function PublicationFormPage() {
               </div>
             )}
           </div>
+
+
           <div style={styles.buttonGroup}>
             <button
               type="button"

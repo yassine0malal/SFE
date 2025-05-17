@@ -12,7 +12,7 @@ switch ($method) {
         if (isset($_GET['id_contact'])) {
             $result = $model->getById($_GET['id_contact']);
         } else {
-            $result = $model->getAll();
+            $result = $model->getAll("SELECT * FROM contact ORDER BY id_contact desc");
         }
         echo json_encode($result);
         break;

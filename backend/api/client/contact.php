@@ -15,14 +15,13 @@ switch ($method) {
                 if (isset($input['csrf_token']) && hash_equals($_SESSION['csrf_token'], $input['csrf_token'])) {
                     //supprimer le csrf_token 
                     unset($_SESSION['csrf_token']);
-                    if (isset($input['name'], $input['Email'], $input['phone_prefix'], $input['phone'], $input['subject'], $input['message'])) {
+                    if (isset($input['name'], $input['Email'], $input['phone_prefix'], $input['phone'], $input['message'])) {
                         $name = htmlspecialchars(trim($input['name']));
                         $email = filter_var(trim($input['Email']), FILTER_VALIDATE_EMAIL);
                         $telephone = htmlspecialchars(trim($input['phone_prefix'] . ' ' . $input['phone']));
-                        $subject = htmlspecialchars(trim($input['subject']));
                         $message = htmlspecialchars(trim($input['message']));
 
-                        if (!$name || !$email || !$telephone || !$subject || !$message) {
+                        if (!$name || !$email || !$telephone || !$message) {
                             http_response_code(400);
                             echo json_encode(['error' => 'Champs invalides']);
                             exit;
@@ -32,7 +31,6 @@ switch ($method) {
                             'nom_prenom' => $name,
                             'adresse_email' => $email,
                             'telephone' => $telephone,
-                            'sujet' => $subject,
                             'message' => $message,
                         ]);
                         echo json_encode(['success' => true, 'id' => $id]);

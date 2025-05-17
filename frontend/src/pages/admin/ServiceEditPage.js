@@ -184,10 +184,7 @@ export default function ServiceEditPage() {
   // Submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if(index === 0){
-      navigate("/services");
-      return;
-    }
+    
     
     // Basic validation - only check if we have either existing or new data
     let newErrors = {};
@@ -223,9 +220,12 @@ export default function ServiceEditPage() {
             newErrors.sous_services = "Veuillez remplir tous les sous-services ou aucun.";
         }
     }
-
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
+    if(index === 0){
+      navigate("/services");
+      return;
+    }
 
     try {
         const formDataToSend = new FormData();

@@ -157,7 +157,7 @@ function ContactsList({ contacts, onDelete, isMobile }) {
             <p><strong>Nom :</strong> {c.nom_prenom}</p>
             <p><strong>adresse_email :</strong> {c.adresse_email}</p>
             <p><strong>Télételephone :</strong> {c.telephone}</p>
-            <p><strong>Sujet :</strong> {c.sujet}</p>
+            <p><strong>Message :</strong> {c.message}</p>
             <button
               style={styles.deleteBtn}
               onClick={() => onDelete(c.id_contact)}
@@ -175,7 +175,7 @@ function ContactsList({ contacts, onDelete, isMobile }) {
     <table style={styles.table}>
       <thead>
         <tr>
-          {["Nom complet","E‑mail","N° Télételephone","Sujet","Action"].map((h,i)=>(
+          {["Nom complet","E‑mail","N° Télételephone","Message","Action"].map((h,i)=>(
             <th key={i} style={styles.thtdHeader}>{h}</th>
           ))}
         </tr>
@@ -186,7 +186,7 @@ function ContactsList({ contacts, onDelete, isMobile }) {
             <td style={styles.thtd}>{c.nom_prenom}</td>
             <td style={styles.thtd}>{c.adresse_email}</td>
             <td style={styles.thtd}>{c.telephone}</td>
-            <td style={styles.thtd}>{c.sujet}</td>
+            <td style={styles.thtd}>{c.message}</td>
             <td style={styles.thtd}>
               <button
                 style={styles.deleteBtn}

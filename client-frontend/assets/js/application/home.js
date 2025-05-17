@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
             injectPublications(data.publications);
             renderGaleries(data.galeries);     // galeries in blog section
             renderCommentaires(data.avis);
+            injectCardServices(data.services);
+            injectClients(data.clients);
             // alert(JSON.stringify(data.publications));
         })
         .catch(err => {
@@ -191,6 +193,75 @@ injectServices(data.services);
             prevEl: '.hap-testimonial-button-prev',
         },
     });
-}
+    }
+
+    function injectCardServices(servicesComplet){
+        const servicesCard = document.getElementById('servicesCard');
+        servicesComplet.forEach((service,idx)=>{
+            let a = document.createElement('a');
+            a.href=`service-single.html?id=${service.service_id}`
+            let li = document.createElement('li');
+            li.textContent=`${service.nom_service}`
+            a.appendChild(li);
+            servicesCard.appendChild(a)
+        })
+
+    }
+
+    function injectClients(clients) {
+        const clientsContainer = document.getElementById('clients-displaying');
+        
+        if (!clientsContainer) {
+            console.error('Clients container not found');
+            return;
+        }
+
+        clients.forEach((client) => {
+            // Create a temporary container to convert HTML string to DOM element
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = `
+                <div class="hpt-client-logo-1-slider-single">
+                    <img src="${BASE_GALERIE_URL + client.image}" alt="${client.nom_entreprise}">
+                </div>
+            `;
+            
+            // Get the first element child (the actual slider item)
+            const sliderItem = tempDiv.firstElementChild;
+            
+            // Append the DOM element
+            clientsContainer.appendChild(sliderItem);
+        });
+
+        // Initialize the slider after adding all items
+        initializeClientSlider();
+    }
+
+    function initializeClientSlider() {
+        // If you're using a slider library like Swiper
+        new Swiper('.hpt-client-logo-1-slider', {
+            slidesPerView: 5,
+            spaceBetween: 30,
+            loop: true,
+            autoplay: {
+                delay: 2500,
+                disableOnInteraction: false,
+            },
+            breakpoints: {
+                320: {
+                    slidesPerView: 2,
+                    spaceBetween: 20,
+                },
+                768: {
+                    slidesPerView: 3,
+                    spaceBetween: 30,
+                },
+                1024: {
+                    slidesPerView: 5,
+                    spaceBetween: 30,
+                },
+            }
+        });
+    }
+
 })
 

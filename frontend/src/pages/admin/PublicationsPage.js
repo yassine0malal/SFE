@@ -627,30 +627,35 @@ export default function PublicationsPage() {
             <div style={subtitleBarStyle}>service : {publication.nom_service}</div>
 
             <div style={imgSliderStyle}>
-  <button 
-    style={imgArrowBtnStyle("left")} 
-    onClick={prevImg} 
-    disabled={publication.images.length <= 1}
-  >
-    &lt;
-  </button>
-  
-  <div style={imageContainerStyle}>
-    <img
-      src={`http://localhost/SFE-Project/backend/public/uploads/${publication.images[imgIndex]}`}
-      alt={publication.title}
-      style={imgStyle}
-    />
-  </div>
-  
-  <button 
-    style={imgArrowBtnStyle("right")} 
-    onClick={nextImg} 
-    disabled={publication.images.length <= 1}
-  >
-    &gt;
-  </button>
-</div>
+                  <button 
+                    style={imgArrowBtnStyle("left")} 
+                    onClick={prevImg} 
+                    disabled={publication.images.length <= 1}
+                  >
+                    &lt;
+                  </button>
+                  
+                  <div style={imageContainerStyle}>
+                    {/* <img
+                      src={`http://localhost/SFE-Project/backend/public/uploads/images/${publication.image_principale}`}
+                      alt={publication.title}
+                      style={imgStyle}
+                    /> */}
+                    <img
+                      src={`http://localhost/SFE-Project/backend/public/uploads/${publication.images[imgIndex]}`}
+                      alt={publication.title}
+                      style={imgStyle}
+                    />
+                  </div>
+                  
+                  <button 
+                    style={imgArrowBtnStyle("right")} 
+                    onClick={nextImg} 
+                    disabled={publication.images.length <= 1}
+                  >
+                    &gt;
+                  </button>
+            </div>
 
             <div style={dotsRowStyle}>
               {publication.images.map((_, i) => (
@@ -858,6 +863,7 @@ const buttonHoverStyles = {
 };
 
 // Modifiez ces styles existants
+
 const imgSliderStyle = {
   display: "flex",
   alignItems: "center",

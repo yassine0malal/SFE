@@ -28,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const email = form.elements["Email"].value.trim();
     const phonePrefix = form.elements["phone_prefix"].value.trim();
     const phone = form.elements["phone"].value.trim();
-    const subject = form.elements["subject"].value.trim();
     const message = form.elements["message"].value.trim();
     const csrfToken = form.elements["csrf_token"].value.trim();
 
@@ -41,7 +40,6 @@ document.addEventListener("DOMContentLoaded", function () {
     } else if (!/^\d{6,15}$/.test(phone)) {
       errors.push("Numéro de téléphone invalide (6 à 15 chiffres).");
     }
-    if (!subject) errors.push("Le sujet est requis.");
     if (!message) errors.push("Le message est requis.");
     if (!csrfToken) errors.push("Token CSRF manquant.");
 
@@ -57,7 +55,6 @@ document.addEventListener("DOMContentLoaded", function () {
       Email: email,
       phone_prefix: phonePrefix,
       phone,
-      subject,
       message,
       csrf_token: csrfToken
     };

@@ -19,6 +19,7 @@
 	<link rel="stylesheet" href="assets/css/magnific-popup.css">
 	<link rel="stylesheet" href="assets/css/style.css">
 	<link rel="stylesheet" href="assets/style/service-details.css">
+	<link rel="stylesheet" href="assets/style/commingSoon.css">
 
 
 </head>
@@ -420,13 +421,15 @@
 	<footer id="bi-footer" class="bi-footer-section" data-background="assets/img/bg/footer-bg.jpg">
 		<div class="bi-footer-cta position-relative">
 			<div class="container">
-				<div class="bi-footer-cta-content headline d-flex align-items-center  justify-content-between flex-wrap" data-background="assets/img/user/footer.png">
-					<div class="bi-footer-cta-text bg-black"> 
+				<div class="bi-footer-cta-content headline d-flex align-items-center  justify-content-between flex-wrap"
+					data-background="assets/img/user/footer.png">
+					<div class="bi-footer-cta-text bg-black">
 						<h3>Nous sommes là pour vous aider à améliorer vos affaires?</h3>
 					</div>
 					<div class="bi-cta-btn">
 						<div class="bi-btn-1  bi-btn-area text-uppercase">
-							<a class="bi-btn-main  bi-btn-hover bi-btn-item" href="contact.html">  <span></span> Contact Us</a>
+							<a class="bi-btn-main  bi-btn-hover bi-btn-item" href="contact.html"> <span></span> Contact
+								Us</a>
 						</div>
 					</div>
 				</div>
@@ -438,22 +441,33 @@
 					<div class="col-lg-5">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
 							<div class="about-widget">
-								<h3>Travailler ensemble Les idées prennent vie</h3>
+								<h3>Web Design Développement & Communication</h3>
 								<p>
-									Quelle que soit la taille de votre entreprise, pour vous développer et atteindre de nouveaux sommets, vous aurez besoin d'une agence pour vous accompagner. Une agence avec un processus précis.								</p>
+									Dans un monde numérique en constante évolution, notre agence combine créativité et
+									expertise technique pour propulser votre entreprise vers de nouveaux horizons.
+
+									Notre équipe pluridisciplinaire offre des solutions complètes en design graphique,
+									impression professionnelle, développement web et communication visuelle, adaptées à
+									vos objectifs spécifiques.
+
+									De la conception graphique à l'impression, en passant par la réalisation web, nous
+									vous accompagnons avec une méthodologie éprouvée pour construire une identité
+									visuelle qui vous démarque et stimule votre croissance.
+								</p>
 							</div>
 						</div>
 					</div>
 					<div class="col-lg-2">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
 							<div class="menu-widget">
-								<h3 class="widget-title">Development</h3>
+								<h3 class="widget-title">Navigation</h3>
 								<ul>
-									<li><a href="#">Front End (HTML, CSS, React)</a></li>
-									<li><a href="#">Backend (Node.js, MongoDB,MySQL)</a></li>
-									<li><a href="#">php,Symfony, laravel</a></li>
-									<li><a href="#">Android/iOS (Kotlin, Flutter,Swift)</a></li>
-									<li><a href="#">Applications Cross-platform</a></li>
+									<li><a href="index-4.html">Home</a></li>
+									<li><a href="service.html">Services</a></li>
+									<li><a href="blog-1.html">Réalisations</a></li>
+									<li><a href="blog-2.html">Produits</a></li>
+									<li><a href="about.html">À propos de Nous</a></li>
+									<li><a href="contact.html">Contactez-Nous</a></li>
 								</ul>
 							</div>
 						</div>
@@ -461,33 +475,23 @@
 					<div class="col-lg-3">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
 							<div class="menu-widget">
-								<h3 class="widget-title"> Design Graphique</h3>
-								<ul>
-									<li><a href="#">Conception de logos</a></li>
-									<li><a href="#">Carte visite</a></li>
-									<li><a href="#">Branding d'entreprise</a></li>
-									<li><a href="#">Design innovant</a></li>
-									<li><a href="#">Emballage des Coopérative </a></li>
-									<li><a href="#">Annonces Professionnelles</a></li>
+								<h3 class="widget-title"> Services</h3>
+								<ul id="servicesCard">
+									
 								</ul>
-								
 							</div>
 						</div>
 					</div>
 					<div class="col-lg-2">
 						<div class="bi-footer-widget headline pera-content ul-li-block">
-							<div class="menu-widget">
-								<h3 class="widget-title">Impression</h3>
-								<ul>
-									<li><a href="#">Design Print</a></li>
-									<li><a href="#">Supports Publicitaires</a></li>
-									<li><a href="#">Packaging Créatif</a></li>
-									<li><a href="#">Signalétique</a></li>
-									<li><a href="#">Marquage Véhicule</a></li>
-									<li><a href="#">Impression Grand Format</a></li>
-									<li><a href="#">Marquage Vestimentaire</a></li>
-									<li><a href="#">Solutions sur mesure</a></li>
-								</ul>
+							<h3 class="widget-title">Abonnez-nous</h3>
+							<div class="footer-subscription-form" style="position: relative; padding: 20px 0;">
+								<form action="/SFE-Project/backend/api/client/abonnees.php" method="post"
+									id="coming-soon-form">
+									<input type="text" name="email" placeholder="E-mail / Tel"
+										required>
+									<button type="submit">Envoyer</button>
+								</form>
 							</div>
 						</div>
 					</div>
@@ -499,10 +503,10 @@
 				<div class="bi-footer-social-content ul-li">
 					<ul>
 						<!-- <li><a href="#"><i class="fal fa-basketball-ball"></i> Dribbble </a></li> -->
-						<li><a href="#"><i class="fab fa-linkedin"></i>  Linkedin  </a></li>
-						<li><a href="#"><i class="fab fa-whatsapp"></i> Whatsapp    </a></li>
-						<li><a href="#"><i class="fab fa-facebook-f"></i> Facebook  </a></li>
-						<li><a href="#"><i class="fab fa-instagram"></i> Instagram  </a></li>
+						<li><a href="#"><i class="fab fa-linkedin"></i> Linkedin </a></li>
+						<li><a href="#"><i class="fab fa-whatsapp"></i> Whatsapp </a></li>
+						<li><a href="#"><i class="fab fa-facebook-f"></i> Facebook </a></li>
+						<li><a href="#"><i class="fab fa-instagram"></i> Instagram </a></li>
 						<li><a href="#"><i class="fab fa-youtube"></i> Youtube </a></li>
 					</ul>
 				</div>

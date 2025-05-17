@@ -22,15 +22,12 @@ class AvisUtilisateurModel {
         return $this->db->select("SELECT * FROM avis_utilisateurs WHERE id_publication = ? and approuve = 1 ", [$id_publication]);
     }
 
-    public function create($nom_prenom, $message, $id_service = null, $id_publication = null) {
+    public function create($nom_prenom, $message, $id_publication = null) {
         $data = [
             'nom_prenom' => $nom_prenom,
-            'approuve' => false,
             'message' => $message
         ];
-        if ($id_service !== null) {
-            $data['id_service'] = $id_service;
-        }
+        
         if ($id_publication !== null) {
             $data['id_publication'] = $id_publication;
         }
@@ -39,17 +36,20 @@ class AvisUtilisateurModel {
         return $this->db->insert('avis_utilisateurs', $data);
     }
 
-    public function update($id, $approuve) {
+    public function update($id, $approuve,$sex) {
 
         return $this->db->update(
             'avis_utilisateurs',
             [
-                'approuve' => $approuve
+                'approuve' => $approuve,
+                'sex' => $sex
+
             ],
             'id = ?',
             [$id]
         );
     }
+    
     public function delete($id) {
         return $this->db->delete('avis_utilisateurs', 'id = ?', [$id]);
     }

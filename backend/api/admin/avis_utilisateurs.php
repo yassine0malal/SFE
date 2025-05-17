@@ -10,25 +10,37 @@ switch ($method) {
     case 'GET':
         if (isset($_GET['id'])) {
             $result = $model->getById($_GET['id']);
+            if($result['id_publication']===null){
+                echo json_encode([
+                    'avis'=>$result,
+                    'success' => true
+                ]);
+            }else if($result['id_publication']){
+                echo json_encode([
+                    'commentaires'=>$result,
+                    'success' => true
+                ]);
+            }
+
         } else {
             $result = $model->getAll();
-        }
-        echo json_encode($result);
-        break;
-
-        case 'POST':
-            $data = json_decode(file_get_contents('php://input'), true);
-            if (isset($data['nom_prenom'], $data['message'])) {
-                // Préparer les champs optionnels
-                $id_service = isset($data['id_service']) ? $data['id_service'] : null;
-                $id_publication = isset($data['id_publication']) ? $data['id_publication'] : null;
-                $id = $model->create($data['nom_prenom'], $data['message'], $id_service, $id_publication);
-                echo json_encode(['success' => true, 'id' => $id]);
-            } else {
-                http_response_code(400);
-                echo json_encode(['error' => 'Champs manquants']);
+            $commmentaires = [];
+            $avis = [];
+            foreach ($result as $avi) {
+                if ($avi['id_publication'] !== null) {
+                    $commmentaires[]=$avi;
+                }else{
+                    $avis[]=$avi;
+                }
             }
+            echo json_encode([
+                'avis'=>$avis,
+                'commentaires'=>$commmentaires,
+                'success' => true
+            ]);
             break;
+        }
+
 
         case 'DELETE':
             if (isset($_GET['id'])) {
@@ -48,24 +60,29 @@ switch ($method) {
     
         case 'PUT':
             $data = json_decode(file_get_contents('php://input'), true);
-            if (isset($data['id'], $data['approuve'])) {
-                // Vérifier que approuve est bien un booléen (true/false ou 1/0)
-                if (!is_bool($data['approuve']) && !in_array($data['approuve'], [0, 1], true)) {
-                    http_response_code(400);
-                    echo json_encode(['error' => "La valeur de 'approuve' doit être un booléen (true/false ou 1/0)"]);
-                    break;
-                }
+            if (isset($data['id'])) {
                 $avis = $model->getById($data['id']);
                 if ($avis) {
-                    $model->update($data['id'], $data['approuve']);
-                    echo json_encode(['success' => true]);
+                    // Handle both approuve and sex parameters
+                    $approuve = isset($data['approuve']) ? $data['approuve'] : null;
+                    $sex = isset($data['sex']) ? $data['sex'] : null;
+                    
+                    // Update the model
+                    $result = $model->update($data['id'], $approuve, htmlspecialchars($sex));
+                    
+                    if ($result) {
+                        echo json_encode(['success' => true]);
+                    } else {
+                        http_response_code(500);
+                        echo json_encode(['error' => "Erreur lors de la mise à jour"]);
+                    }
                 } else {
                     http_response_code(404);
                     echo json_encode(['error' => "Cet avis n'existe pas"]);
                 }
             } else {
                 http_response_code(400);
-                echo json_encode(['error' => 'Champs manquants']);
+                echo json_encode(['error' => 'ID manquant']);
             }
             break;
 

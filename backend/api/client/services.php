@@ -34,36 +34,40 @@ function validateImage($file) {
 function parseSousServices(string $str): array {
     $titles = [];
     $descriptions = [];
+    $icons=[];
     // on vire le dernier '|' éventuel et on split
     $pairs = array_filter(explode('|', rtrim($str, '|')));
     foreach ($pairs as $pair) {
         // ne scinde qu'au premier ':'
-        [$t, $d] = array_pad(explode(':', $pair, 2), 2, '');
+        [$t, $d,$i] = array_pad(explode(':', $pair, 3), 3, '');
         $titles[] = trim($t);
         $descriptions[] = trim($d);
+        $icons[]=trim($i);
     }
-    return ['titles' => $titles, 'descriptions' => $descriptions];
+    return ['titles' => $titles, 'descriptions' => $descriptions,'icons'=>$icons];
 }
 
 switch ($method) {
     case 'GET':
         if (isset($_GET['id'])) {
             // récupération d'un service
-            $service = $model->getById($_GET['id']);
+            $service = $model->getById(htmlspecialchars($_GET['id']));
             if ($service && !empty($service['sous_services'])) {
                 $parsed = parseSousServices($service['sous_services']);
                 $service['sous_service_titles']       = $parsed['titles'];
                 $service['sous_service_descriptions'] = $parsed['descriptions'];
+                $service['icons']=$parsed['icons'];
             } else {
                 $service['sous_service_titles']       = [];
                 $service['sous_service_descriptions'] = [];
+                $service['icons']=[];
             }
             echo json_encode($service);
         } else {
             // récupération de tous les services
             $rawServices = $model->getAll(
                 "SELECT service_id, nom_service, description, image,
-                        details, sous_services
+                        details, sous_services,images
                  FROM services
                  WHERE is_active = 1
                  ORDER BY service_id DESC"

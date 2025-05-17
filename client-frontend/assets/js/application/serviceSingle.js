@@ -140,6 +140,57 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (subServicesHeading) subServicesHeading.style.display = 'none';
             }
 
+            // Add this new section for image gallery preview
+            const imageGalleryHtml = `
+                <div class="bi-service-gallery" style="margin: 30px 0;">
+                    <h3 style="margin-bottom: 20px; color: #333;">Galerie d'images</h3>
+                    <div class="row" style="margin-bottom: 30px;">
+                        ${service.images.split(',').map(image => `
+                            <div class="col-md-4" style="margin-bottom: 20px;">
+                                <div class="gallery-item" 
+                                     style="border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    <img src="http://localhost/SFE-Project/backend/public/uploads/images/${image.trim()}" 
+                                         alt="Image service"
+                                         style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;"
+                                         onclick="openImageModal(this.src)">
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Insert the gallery before sous-services section
+            if (subServicesSection && service.images) {
+    subServicesSection.insertAdjacentHTML('afterend', imageGalleryHtml);
+}
+
+            // Add image modal to body
+            if (!document.getElementById('imageModal')) {
+                const modalHtml = `
+                    <div id="imageModal" class="modal" 
+                         style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                                background: rgba(0,0,0,0.9); z-index: 1000;">
+                        <span class="close" 
+                              style="position: absolute; right: 25px; top: 15px; color: #fff; 
+                                     font-size: 35px; cursor: pointer;">&times;</span>
+                        <img id="modalImage" 
+                             style="max-width: 90%; max-height: 90%; margin: auto; display: block; 
+                                    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+                // Add modal event listeners
+                const modal = document.getElementById('imageModal');
+                const span = document.getElementsByClassName('close')[0];
+                
+                span.onclick = () => modal.style.display = "none";
+                modal.onclick = (e) => {
+                    if (e.target === modal) modal.style.display = "none";
+                };
+            }
+
             // Réinitialisation des animations
             new WOW().init();
 
@@ -148,6 +199,40 @@ document.addEventListener('DOMContentLoaded', function() {
             showError('Erreur de traitement des données');
         }
     }
+
+    // Add this function to handle image modal
+    function openImageModal(src) {
+        const modal = document.getElementById('imageModal');
+        const modalImg = document.getElementById('modalImage');
+        modal.style.display = "block";
+        modalImg.src = src;
+    }
+
+    // Add CSS to head
+    const style = document.createElement('style');
+    style.textContent = `
+        .gallery-item {
+            transition: transform 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+        }
+        .modal {
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0}
+            to {opacity: 1}
+        }
+        #modalImage {
+            animation: zoomIn 0.3s;
+        }
+        @keyframes zoomIn {
+            from {transform: translate(-50%, -50%) scale(0.9)}
+            to {transform: translate(-50%, -50%) scale(1)}
+        }
+    `;
+    document.head.appendChild(style);
 
     function populateServicesSidebar(services, currentService) {
         const sidebarList = document.querySelector('.service-widget ul');
