@@ -5,6 +5,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Get the product ID from the URL
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id_galerie');
+    if (!productId || isNaN(productId)) {
+        window.location.href ="/SFE-Project/client-frontend/404.html";;
+        return;
+    }
     
     // Function to fetch product data
     async function fetchProductData() {
@@ -16,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         try {
             const response = await fetch(`/SFE-Project/backend/public/api/client/produits?id_galerie=${productId}`);
-            if (!response.ok) throw new Error('Failed to fetch product');
+            if (!response.ok) throw window.location.href ="/SFE-Project/client-frontend/404.html";;
             const data = await response.json();
             const product = Array.isArray(data) ? data[0] : data;
             
@@ -63,6 +67,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         const otherServices = services;
         
         if (otherServices.length === 0) {
+            // window.location.href ="/SFE-Project/client-frontend/404.html";
             sidebarList.innerHTML = '<li>Aucun autre service disponible</li>';
             return;
         }

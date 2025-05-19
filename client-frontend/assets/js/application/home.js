@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const container = document.querySelector('.bi-why-choose-us-area-1');
         if (!container || !services.length) return;
 
-        // Add necessary styles
+        // Update the styles to include navigation buttons
         const styleSheet = `
             <style>
                 .services-conveyor {
@@ -142,59 +142,131 @@ document.addEventListener('DOMContentLoaded', function () {
                 .nav-dot.active {
                     background: #FF3838;
                 }
+                .service-nav-buttons {
+                    display: none; /* Hidden by default */
+                }
+                
+                @media (min-width: 992px) {
+                    .service-nav-buttons {
+                        display: block;
+                        position: absolute;
+                        top: 50%;
+                        width: 100%;
+                        transform: translateY(-50%);
+                        z-index: 10;
+                    }
+                    
+                    .service-nav-btn {
+                        position: absolute;
+                        width: 50px;
+                        height: 50px;
+                        border: none;
+                        border-radius: 50%;
+                        background: #FF3838;
+                        color: white;
+                        font-size: 20px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    
+                    .service-nav-btn:hover {
+                        background: #cc2e2e;
+                        transform: scale(1.1);
+                    }
+                    
+                    .service-prev-btn {
+                        left: 20px;
+                    }
+                    
+                    .service-next-btn {
+                        right: 20px;
+                    }
+                }
             </style>
         `;
         document.head.insertAdjacentHTML('beforeend', styleSheet);
 
-        // Create conveyor structure
+        // Helper function to parse sous-services
+        function getSousServicesTitles(sousServicesStr) {
+            if (!sousServicesStr) return [];
+            return sousServicesStr.split('|').map(item => item.split(':')[0]);
+        }
+
         container.innerHTML = `
             <div class="services-conveyor">
+                <div class="service-nav-buttons">
+                    <button class="service-nav-btn service-prev-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="service-nav-btn service-next-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
                 <div class="services-track">
-                    ${services.map(service => `
-                        <div class="service-item">
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <div class="bi-why-choose-img1-area position-relative">
-                                        <div class="why-choose-img1">
-                                            <img src="${BASE_IMAGE_URL}${service.image}" alt="${service.nom_service}">
+                    ${services.map(service => {
+                        const sousTitles = getSousServicesTitles(service.sous_services);
+                        return `
+                            <div class="service-item">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="bi-why-choose-img1-area position-relative">
+                                            <div class="why-choose-img1">
+                                                <img src="${BASE_IMAGE_URL}${service.image}" alt="${service.nom_service}">
+                                            </div>
+                                            <div class="why-choose-img2 position-absolute" data-parallax='{"x" : -60}'>
+                                                <img src="assets/img/about/whc1.2.png" alt="">
+                                            </div>
+                                            <div class="why-choose-img3 position-absolute">
+                                                <img src="assets/img/about/wh1.5.png" alt="">
+                                            </div>
+                                            <div class="why-choose-img4 position-absolute" data-parallax='{"x" : -60, "rotateY":-300}'>
+                                                <img src="assets/img/about/wh1.3.png" alt="">
+                                            </div>
+                                            <div class="why-choose-img5 position-absolute" data-parallax='{"y" : -60}'>
+                                                <img src="assets/img/about/wh1.4.png" alt="">
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="bi-why-choose-textarea">
-                                        <div class="bi-why-choose-text_1">
-                                            <div class="bi-section-title-4 bins-text headline">
-                                                <div class="sub-title position-relative pera-content text-uppercase">
-                                                    ${service.nom_service}
+                                    <div class="col-lg-6">
+                                        <div class="bi-why-choose-textarea">
+                                            <div class="bi-why-choose-text_1">
+                                                <div class="bi-section-title-4 bins-text headline">
+                                                    <div class="sub-title position-relative pera-content text-uppercase">
+                                                        ${service.nom_service}
+                                                    </div>
+                                                    <h2 class="tx-split-text text-white">
+                                                        ${service.nom_service.split('.')[0]}
+                                                    </h2>
+                                                    <p>${service.description}</p>
                                                 </div>
-                                                <h2 class="tx-split-text text-dark">
-                                                    ${service.nom_service.split('.')[0]}
-                                                </h2>
-                                                <p>${service.description}</p>
-                                            </div>
-                                            ${service.sous_service_titles?.length ? `
-                                                <div class="bi-why-choose-feature ul-li">
-                                                    <ul>
-                                                        ${service.sous_service_titles.map(title => 
-                                                            `<li class="text-dark">${title}</li>`
-                                                        ).join('')}
-                                                    </ul>
+                                                ${sousTitles.length ? `
+                                                    <div class="bi-why-choose-feature ul-li wow fadeInRight" 
+                                                        data-wow-delay="300ms" data-wow-duration="1000ms">
+                                                        <ul>
+                                                            ${sousTitles.map(title => `
+                                                                <li class="text-white">${title}</li>
+                                                            `).join('')}
+                                                        </ul>
+                                                    </div>
+                                                ` : ''}
+                                                <div class="bi-btn-4 text-uppercase">
+                                                    <a href="service-single.html?id=${service.service_id}">
+                                                        Voir le service
+                                                        <span class="d-flex justify-content-center align-items-center">
+                                                            <img src="assets/img/icon/arrow.svg" alt="">
+                                                        </span>
+                                                    </a>
                                                 </div>
-                                            ` : ''}
-                                            <div class="bi-btn-4 text-uppercase">
-                                                <a href="service-single.html?id=${service.service_id}">
-                                                    Voir le service
-                                                    <span class="d-flex justify-content-center align-items-center">
-                                                        <img src="assets/img/icon/arrow.svg" alt="">
-                                                    </span>
-                                                </a>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                 </div>
                 <div class="services-navigation">
                     ${services.map((_, i) => `
@@ -206,30 +278,78 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const track = container.querySelector('.services-track');
         const dots = container.querySelectorAll('.nav-dot');
+        const prevBtn = container.querySelector('.service-prev-btn');
+        const nextBtn = container.querySelector('.service-next-btn');
         let currentIndex = 0;
         let isAnimating = false;
 
         // Handle wheel event
         container.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            if (isAnimating) return;
+            // Only prevent default if Shift key is pressed (horizontal scroll)
+            if (e.shiftKey) {
+                e.preventDefault();
+                if (isAnimating) return;
 
-            const direction = e.deltaY > 0 ? 1 : -1;
-            const nextIndex = Math.min(Math.max(currentIndex + direction, 0), services.length - 1);
-            
-            if (nextIndex !== currentIndex) {
-                moveToIndex(nextIndex);
+                const direction = e.deltaX > 0 ? 1 : -1;
+                const nextIndex = Math.min(Math.max(currentIndex + direction, 0), services.length - 1);
+                
+                if (nextIndex !== currentIndex) {
+                    moveToIndex(nextIndex);
+                }
             }
         });
 
-        // Handle dot navigation
-        dots.forEach(dot => {
-            dot.addEventListener('click', () => {
-                const index = parseInt(dot.dataset.index);
-                if (index !== currentIndex) {
-                    moveToIndex(index);
+        // Add touch support for mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        container.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        container.addEventListener('touchend', (e) => {
+            if (isAnimating) return;
+            
+            touchEndX = e.changedTouches[0].screenX;
+            const direction = touchStartX - touchEndX > 0 ? 1 : -1;
+            
+            // Only move if swipe is significant enough (more than 50px)
+            if (Math.abs(touchStartX - touchEndX) > 50) {
+                const nextIndex = Math.min(Math.max(currentIndex + direction, 0), services.length - 1);
+                if (nextIndex !== currentIndex) {
+                    moveToIndex(nextIndex);
                 }
-            });
+            }
+        });
+
+        // Add keyboard arrow support
+        document.addEventListener('keydown', (e) => {
+            if (isAnimating) return;
+
+            if (e.key === 'ArrowLeft') {
+                const nextIndex = Math.max(currentIndex - 1, 0);
+                if (nextIndex !== currentIndex) {
+                    moveToIndex(nextIndex);
+                }
+            } else if (e.key === 'ArrowRight') {
+                const nextIndex = Math.min(currentIndex + 1, services.length - 1);
+                if (nextIndex !== currentIndex) {
+                    moveToIndex(nextIndex);
+                }
+            }
+        });
+
+        // Add button click handlers
+        prevBtn?.addEventListener('click', () => {
+            if (isAnimating) return;
+            const nextIndex = (currentIndex - 1 + services.length) % services.length;
+            moveToIndex(nextIndex);
+        });
+
+        nextBtn?.addEventListener('click', () => {
+            if (isAnimating) return;
+            const nextIndex = (currentIndex + 1) % services.length;
+            moveToIndex(nextIndex);
         });
 
         function moveToIndex(index) {
