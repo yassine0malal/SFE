@@ -6,48 +6,45 @@ document.addEventListener('DOMContentLoaded', function () {
     fetch(API_URL)
         .then(res => res.json())
         .then(data => {
-            injectServices(data.services);
             injectPublications(data.publications);
-            renderGaleries(data.galeries);     // galeries in blog section
+            injectservices(data.services);
+            renderGaleries(data.galeries);     
             renderCommentaires(data.avis);
-            injectCardServices(data.services);
+            injectCardServices(data.publications);
             injectClients(data.clients);
-            // alert(JSON.stringify(data.publications));
         })
         .catch(err => {
             console.error('Erreur lors du chargement des données:', err);
         });
 
-    // SERVICES SECTION
-function injectServices(services) {
-    // Select all service card containers in order
-    const cards = document.querySelectorAll('.bi-service-scroll-area .bi-service-scroll-item');
-    // Loop through the cards and services (show as many as possible)
-    cards.forEach((card, idx) => {
-        if (services[idx]) {
-            const service = services[idx];
-            // Update image
-            const img = card.querySelector('.service-img img');
-            if (img) img.src = BASE_IMAGE_URL + service.image;
-            if (img) img.alt = service.nom_service;
-            // Update title and link
-            const title = card.querySelector('.service-text h3 a');
-            if (title) {
-                title.textContent = service.nom_service;
-                title.href = `service-single.html?id=${service.service_id}`;
-            }
-            // Update arrow link
-            const more = card.querySelector('.service_more');
-            if (more) more.href = `service-single.html?id=${service.service_id}`;
-        } else {
-            // Optionally hide extra cards if not enough services
-            card.style.display = 'none';
-        }
-    });
-}
 
-// In your fetch success callback, call:
-injectServices(data.services);
+    function injectPublications(publications) {
+        const cards = document.querySelectorAll('.bi-service-scroll-area .bi-service-scroll-item');
+        cards.forEach((card, idx) => {
+            if (publications[idx]) {
+                const publication = publications[idx];
+                // Update image
+                const img = card.querySelector('.service-img img');
+                if (img) img.src = BASE_IMAGE_URL + publication.image_principale;
+                if (img) img.alt = publication.title;
+                // Update title and link
+                const title = card.querySelector('.service-text h3 a');
+                if (title) {
+                    title.textContent = publication.title;
+                    title.href = `portfolio-single.html?id=${publication.id_publication}`;
+                }
+                // Update arrow link
+                const more = card.querySelector('.service_more');
+                if (more) more.href = `portfolio-single.html?id=${publication.id_publication}`;
+            } else {
+                // Optionally hide extra cards if not enough services
+                card.style.display = 'none';
+            }
+        });
+    }
+
+    // In your fetch success callback, call:
+    // injectPublications(data.publications);
 
     function renderGaleries(galeries) {
         const container = document.querySelector('.bi-blog-top-content .row');
@@ -99,7 +96,7 @@ injectServices(data.services);
         });
     }
 
-    function injectPublications(publications) {
+    function injectservices(publications) {
     const BASE_GALERIE_URL = 'http://localhost/SFE-Project/backend/public/uploads/images/';
     const cards = document.querySelectorAll('.bi-portfolio-item-4');
     cards.forEach((card, idx) => {
@@ -195,6 +192,7 @@ injectServices(data.services);
     });
     }
 
+    //cards in the footer
     function injectCardServices(servicesComplet){
         const servicesCard = document.getElementById('servicesCard');
         servicesComplet.forEach((service,idx)=>{

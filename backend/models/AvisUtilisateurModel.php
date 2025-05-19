@@ -22,14 +22,21 @@ class AvisUtilisateurModel {
         return $this->db->select("SELECT * FROM avis_utilisateurs WHERE id_publication = ? and approuve = 1 ", [$id_publication]);
     }
 
-    public function create($nom_prenom, $message, $id_publication = null) {
+    public function getByProduitId($id_produit) {
+        return $this->db->select("SELECT * FROM avis_utilisateurs WHERE id_produit = ? and approuve = 1 ", [$id_produit]);
+    }
+
+    public function create($nom_prenom, $message, $id_publication = null,$id_produit = null) {
         $data = [
             'nom_prenom' => $nom_prenom,
-            'message' => $message
+            'message' => $message,
         ];
         
         if ($id_publication !== null) {
             $data['id_publication'] = $id_publication;
+        }
+        if ($id_produit !== null) {
+            $data['id_produit'] = $id_produit;
         }
 
         $data['approuve'] = null;

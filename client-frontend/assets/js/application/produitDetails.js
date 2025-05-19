@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Configuration
     const BASE_IMAGE_URL = 'http://localhost/SFE-Project/backend/public/uploads';
     
@@ -6,32 +6,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id_galerie');
     
-    if (!productId) {
-        alert('Produit non trouvé. ID manquant.');
-        return;
-    }
-    
-    // Fetch product details
-    fetch(`/SFE-Project/backend/public/api/client/produits?id_galerie=${productId}`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erreur lors de la récupération des détails du produit');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Handle the product data
-            const produit = Array.isArray(data) ? data[0] : data;
-            displayProductDetails(produit);
+    // Function to fetch product data
+    async function fetchProductData() {
+        if (!productId) {
+            document.querySelector(".bi-service-details-content").innerHTML = 
+                "<p class='text-danger'>Produit non trouvé. ID manquant.</p>";
+            return;
+        }
+
+        try {
+            const response = await fetch(`/SFE-Project/backend/public/api/client/produits?id_galerie=${productId}`);
+            if (!response.ok) throw new Error('Failed to fetch product');
+            const data = await response.json();
+            const product = Array.isArray(data) ? data[0] : data;
             
-            // Fetch services for sidebar
-            fetchServices(produit.id_service);
-        })
-        .catch(error => {
+            if (product) {
+                displayProductDetails(product);
+                fetchServices(product.id_service);
+                fetchAndDisplayComments(productId);
+            }
+        } catch (error) {
             console.error('Error:', error);
-            alert(`Erreur: ${error.message}`);
-        });
-    
+        }
+    }
+
     // Function to fetch services and populate sidebar
     function fetchServices(currentServiceId) {
         fetch('/SFE-Project/backend/public/api/client/services')
@@ -54,84 +52,36 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Function to populate services sidebar
-    // function populateServicesSidebar(services, currentService) {
-    //     const sidebarList = document.querySelector('.service-widget ul');
-    //     if (!sidebarList) return;
+    function populateServicesSidebar(services, currentService) {
+        const sidebarList = document.querySelector('.service-widget ul');
+        if (!sidebarList) return;
         
-    //     // Clear existing static content
-    //     sidebarList.innerHTML = '';
+        // Clear existing static content
+        sidebarList.innerHTML = '';
         
-    //     // Filter out current service and limit to 6 items
-    //     const otherServices = services
-    //         // .filter(s => s.service_id != currentService.service_id || s.id_service != currentService.service_id)
-    //         // .slice(0, 6);
+        // No need to filter out current service anymore
+        const otherServices = services;
         
-    //     if (otherServices.length === 0) {
-    //         sidebarList.innerHTML = '<li>Aucun autre service disponible</li>';
-    //         return;
-    //     }
+        if (otherServices.length === 0) {
+            sidebarList.innerHTML = '<li>Aucun autre service disponible</li>';
+            return;
+        }
         
-    //     // Create new list items
-    //     otherServices.forEach(service => {
-    //         const listItem = document.createElement('li');
-    //         const link = document.createElement('a');
+        // Create new list items
+        otherServices.forEach(service => {
+            const listItem = document.createElement('li');
+            const link = document.createElement('a');
             
-    //         // Handle different service ID field names
-    //         const serviceId = service.service_id || service.id_service;
+            // Handle different service ID field names
+            const serviceId = service.service_id || service.id_service;
             
-    //         link.href = `service-single.html?id=${serviceId}`;
-    //         link.textContent = service.nom_service || service.title || service.name;
+            link.href = `service-single.html?id=${serviceId}`;
+            link.textContent = service.nom_service || service.title || service.name;
             
-    //         // Check if this is the current service
-    //         if ((service.service_id == currentService.service_id) || 
-    //             (service.id_service == currentService.service_id)) {
-    //             link.classList.add('active');
-    //         }
-            
-    //         listItem.appendChild(link);
-    //         sidebarList.appendChild(listItem);
-    //     });
-    // }
-    
-
-
-    // Function to populate services sidebar
-function populateServicesSidebar(services, currentService) {
-    const sidebarList = document.querySelector('.service-widget ul');
-    if (!sidebarList) return;
-    
-    // Clear existing static content
-    sidebarList.innerHTML = '';
-    
-    // No need to filter out current service anymore
-    const otherServices = services;
-    
-    if (otherServices.length === 0) {
-        sidebarList.innerHTML = '<li>Aucun autre service disponible</li>';
-        return;
+            listItem.appendChild(link);
+            sidebarList.appendChild(listItem);
+        });
     }
-    
-    // Create new list items
-    otherServices.forEach(service => {
-        const listItem = document.createElement('li');
-        const link = document.createElement('a');
-        
-        // Handle different service ID field names
-        const serviceId = service.service_id || service.id_service;
-        
-        link.href = `service-single.html?id=${serviceId}`;
-        link.textContent = service.nom_service || service.title || service.name;
-        
-        // Remove this block to eliminate the active class
-        // if ((service.service_id == currentService.service_id) ||
-        //     (service.id_service == currentService.service_id)) {
-        //     link.classList.add('active');
-        // }
-        
-        listItem.appendChild(link);
-        sidebarList.appendChild(listItem);
-    });
-}
 
     function displayProductDetails(produit) {
         // Update the page title
@@ -265,4 +215,163 @@ function populateServicesSidebar(services, currentService) {
             }
         }
     }
+
+    async function fetchAndDisplayComments(productId) {
+        try {
+            const response = await fetch(`/SFE-Project/backend/public/api/client/avis_utilisateurs?id_produit=${productId}`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const comments = await response.json();
+            renderComments(comments);
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+        }
+    }
+
+    function renderComments(comments) {
+        const commentWrapper = document.querySelector('.bi-testimonial-slider .swiper-wrapper');
+        if (!commentWrapper) return;
+
+        if (!comments || comments.length === 0) {
+            commentWrapper.innerHTML = `
+                <div class="swiper-slide">
+                    <div class="bi-testimonial-item d-flex">
+                        <div class="testimonial-img">
+                            <img src="assets/img/home_5/about/tst1.png" alt="No comments">
+                        </div>
+                        <div class="testimonial-text headline pera-content">
+                            <h3 style="color: black;">" Aucun commentaire "</h3>
+                            <div class="testimonial-desc-author">
+                                <p>Soyez le premier à commenter ce produit!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+        } else {
+            commentWrapper.innerHTML = comments.map(comment => `
+                <div class="swiper-slide">
+                    <div class="bi-testimonial-item d-flex">
+                        <div class="testimonial-img">
+                            <img src="assets/img/user/${comment.sex === 'female' ? 'women-comment.jpg' : 'comment-man.jpg'}" 
+                                 alt="${comment.nom_prenom}" >
+                        </div>
+                        <div class="testimonial-text headline pera-content">
+                            <h3 style="color: white;">" ${comment.nom_prenom} "</h3>
+                            <div class="testimonial-desc-author">
+                                <p>${comment.message}</p>
+                                <span style="font-size: 0.8em; color: #666;">
+                                    ${new Date(comment.created_at).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`
+            ).join('');
+        }
+
+        // Initialize/reinitialize Swiper
+        if (window.testimonialSwiper) {
+            window.testimonialSwiper.destroy();
+        }
+
+        window.testimonialSwiper = new Swiper('.bi-testimonial-slider', {
+            slidesPerView: 1,
+            spaceBetween: 30,
+            loop: comments.length > 1,
+            navigation: {
+                nextEl: '.testimoinal-button-next',
+                prevEl: '.testimoinal-button-prev',
+            },
+            autoplay: {
+                delay: 5000,
+                disableOnInteraction: false,
+            }
+        });
+
+        // Show/hide navigation buttons
+        const navButtons = document.querySelectorAll('.testimoinal-button-next, .testimoinal-button-prev');
+        navButtons.forEach(btn => {
+            btn.style.display = comments.length > 1 ? 'flex' : 'none';
+        });
+    }
+
+    // Add the getCsrf function
+    async function getCsrf() {
+        try {
+            const response = await fetch("/SFE-Project/backend/api/client/csrf.php", {
+                credentials: "include",
+                method: "GET",
+            });
+            const data = await response.json();
+            if (data.csrf_token) {
+                const form = document.getElementById("contactForm");
+                if (form) {
+                    let input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "csrf_token";
+                    input.value = data.csrf_token;
+                    form.appendChild(input);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching CSRF token:", err);
+        }
+    }
+
+    // Handle comment form submission
+    const form = document.getElementById("contactForm");
+    if (form) {
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const nom_prenom = form.elements["name"].value.trim();
+            const message = form.elements["message"].value.trim();
+            const csrfToken = form.elements["csrf_token"]?.value;
+            const id_produit = productId;
+
+            let errors = [];
+            if (!nom_prenom) errors.push("Le nom est requis.");
+            if (!message) errors.push("Le message est requis.");
+            if (!csrfToken) errors.push("Token CSRF manquant.");
+
+            if (errors.length > 0) {
+                alert(errors.join("\n"));
+                return;
+            }
+
+            const data = {
+                nom_prenom,
+                message,
+                csrf_token: csrfToken,
+                id_produit
+            };
+
+            try {
+                const response = await fetch("/SFE-Project/backend/public/api/client/avis_utilisateurs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert("Message envoyé avec succès !");
+                    window.location.reload();
+                    form.reset();
+                } else {
+                    alert(result.error || "Erreur lors de l'envoi du message.");
+                }
+            } catch (err) {
+                alert("Erreur réseau ou serveur. essayer de reloader la page avant d'essayer à nouveau.");
+            }
+        });
+    }
+
+    // Initialize page
+    await getCsrf();
+    fetchProductData();
 });

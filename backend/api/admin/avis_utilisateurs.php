@@ -27,7 +27,7 @@ switch ($method) {
             $commmentaires = [];
             $avis = [];
             foreach ($result as $avi) {
-                if ($avi['id_publication'] !== null) {
+                if ($avi['id_publication'] !== null || $avi['id_produit'] !== null) {
                     $commmentaires[]=$avi;
                 }else{
                     $avis[]=$avi;

@@ -63,11 +63,11 @@ class PublicationModel {
         );
         // Log SQL errors if update fails
         if ($result === 0) { // rowCount() returns 0 if nothing changed, but not an error
-            file_put_contents(__DIR__ . '/../api/debug_sql.txt', "No rows updated\n", FILE_APPEND);
+            // file_put_contents(__DIR__ . '/../api/debug_sql.txt', "No rows updated\n", FILE_APPEND);
         }
         if ($result === false) {
             $errorInfo = $this->db->getConnection()->errorInfo();
-            file_put_contents(__DIR__ . '/../api/debug_sql.txt', print_r($errorInfo, true), FILE_APPEND);
+            // file_put_contents(__DIR__ . '/../api/debug_sql.txt', print_r($errorInfo, true), FILE_APPEND);
         }
         return $result;
     }

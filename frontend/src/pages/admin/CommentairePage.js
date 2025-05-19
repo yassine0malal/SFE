@@ -60,8 +60,8 @@ export default function CommentairePage() {
             approuve: a.approuve === '1' ? 'accepted' : a.approuve === '0' ? 'rejected' : 'pending',
             type: 'avis'
           }));
-
           setComments({ commentaires, avis });
+          console.log(JSON.stringify(comments))
         }
       } catch (e) {
         console.error(e);
@@ -455,7 +455,7 @@ export default function CommentairePage() {
                 paddingBottom: 10,
                 borderBottom: "2px solid #eee"
               }}>
-                Commentaires ({comments.commentaires.length})
+                Commentaires 
               </h2>
               {comments.commentaires.map((item, idx) => 
                 renderItem(item, idx, 'commentaires')
@@ -471,7 +471,7 @@ export default function CommentairePage() {
                 paddingBottom: 10,
                 borderBottom: "2px solid #eee"
               }}>
-                Avis ({comments.avis.length})
+                Avis 
               </h2>
               {comments.avis.map((item, idx) => 
                 renderItem(item, idx, 'avis')

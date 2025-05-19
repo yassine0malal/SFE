@@ -142,4 +142,84 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize the clients fetch for sponsor section
     fetchClients();
+
+    // Add these new functions for comment handling
+    async function getCsrf() {
+        try {
+            const response = await fetch("/SFE-Project/backend/api/client/csrf.php", {
+                credentials: "include",
+                method: "GET",
+            });
+            const data = await response.json();
+            if (data.csrf_token) {
+                const form = document.getElementById("contactForm");
+                if (form) {
+                    let input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "csrf_token";
+                    input.value = data.csrf_token;
+                    form.appendChild(input);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching CSRF token:", err);
+        }
+    }
+
+    // Handle form submission
+    const form = document.getElementById("contactForm");
+    if (form) {
+        form.addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const nom_prenom = form.elements["name"].value.trim();
+            const message = form.elements["message"].value.trim();
+            const csrfToken = form.elements["csrf_token"]?.value;
+
+            // Validation
+            let errors = [];
+            if (!nom_prenom) errors.push("Le nom est requis.");
+            if (!message) errors.push("Le message est requis.");
+            if (!csrfToken) errors.push("Token CSRF manquant.");
+
+            if (errors.length > 0) {
+                alert(errors.join("\n"));
+                return;
+            }
+
+            const data = {
+                nom_prenom,
+                message,
+                csrf_token: csrfToken
+            };
+
+            try {
+                const response = await fetch("/SFE-Project/backend/public/api/client/avis_utilisateurs", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    credentials: "include",
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert("Message envoyé avec succès !");
+                    form.reset();
+                    window.location.reload();
+                } else {
+                    throw new Error(result.error || "Erreur lors de l'envoi du message.");
+                }
+            } catch (err) {
+                console.error('Error:', err);
+                alert("Erreur réseau ou serveur. Veuillez réessayer.");
+            }
+        });
+    }
+
+    // Initialize CSRF token when page loads
+    (async function() {
+        await getCsrf();
+    })();
 });

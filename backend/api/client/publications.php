@@ -43,7 +43,8 @@ switch ($method) {
                     'client' => $publication['client'],
                     'site' => $publication['site'],
                     'id_service' => $publication['id_service'],
-                    'nom_service' => $publication['nom_service'], // <-- ici
+                    'image_principale' => '/images/'.$publication['image_principale'],
+                    'nom_service' => $publication['nom_service'],
                 ];
                 echo json_encode($result);
             } else {
@@ -53,17 +54,21 @@ switch ($method) {
         } else {
             $publications = $model->getAllWithService();
             $result = array_map(function($pub) {
+                $images = array_map(function($img){
+                    return '/images/'.trim($img);
+                }, explode(',', $pub['images']));
+                $mainImage = '/images/'.trim($pub['image_principale']);
+                $pub['image_principale'] ? array_unshift($images, $mainImage) : '';
                 return [
                     'id_publication' => $pub['id_publication'],
                     'title' => $pub['title'],
-                    'images' => array_map(function($img) {
-                        return '/images/' . trim($img);
-                    }, explode(',', $pub['images'])),
+                    'images' => $images,
                     'description' => $pub['description'],
                     'client' => $pub['client'],
                     'site' => $pub['site'],
                     'id_service' => $pub['id_service'],
-                    'nom_service' => $pub['nom_service'], // <-- ici
+                    'image_principale' => $pub['image_principale'],
+                    'nom_service' => $pub['nom_service'],
                 ];
             }, $publications);
             echo json_encode($result);
