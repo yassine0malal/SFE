@@ -93,6 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function renderPublication(pub) {
     if (!pub) {
+      window.location.href ="/SFE-Project/client-frontend/404.html";
       document.querySelector(".bi-portfolio-details-content").innerHTML = "<p class='text-danger'>Publication not found.</p>";
       return;
     }

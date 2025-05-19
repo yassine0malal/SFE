@@ -400,5 +400,14 @@
     <script src="assets/js/matter.min.js"></script>
     <script src="assets/js/script.js"></script>
 	<script src="assets/js/application/publications.js"></script>
+
+
+	<script src="assets/js/application/routerValidor.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const validator = new RouteValidator();
+        validator.validateRoute();
+    });
+</script>
 </body>
 </html>

@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const currentService = services.find(s => s.service_id == serviceId);
             
             if (!currentService) {
+                window.location.href ="/SFE-Project/client-frontend/404.html";
                 showError('Service non trouvé');
                 return;
             }

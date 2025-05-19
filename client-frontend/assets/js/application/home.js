@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', function () {
             renderCommentaires(data.avis);
             injectCardServices(data.publications);
             injectClients(data.clients);
+            if (data.services && Array.isArray(data.services)) {
+                injectservices(data.services);
+            }
         })
         .catch(err => {
             console.error('Erreur lors du chargement des données:', err);
@@ -44,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // In your fetch success callback, call:
-    // injectPublications(data.publications);
+    injectPublications(data.publications);
 
     function renderGaleries(galeries) {
         const container = document.querySelector('.bi-blog-top-content .row');
@@ -96,34 +99,180 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function injectservices(publications) {
-    const BASE_GALERIE_URL = 'http://localhost/SFE-Project/backend/public/uploads/images/';
-    const cards = document.querySelectorAll('.bi-portfolio-item-4');
-    cards.forEach((card, idx) => {
-        if (publications[idx]) {
-            const pub = publications[idx];
-            // Update image
-            const img = card.querySelector('.portfolio-img-4 img');
-            if (img && pub.images && pub.images[0]) {
-                img.src = BASE_GALERIE_URL + pub.images[0];
-                img.alt = pub.title || '';
+    function injectservices(services) {
+        const container = document.querySelector('.bi-why-choose-us-area-1');
+        if (!container || !services.length) return;
+
+        // Add necessary styles
+        const styleSheet = `
+            <style>
+                .services-conveyor {
+                    position: relative;
+                    overflow: hidden;
+                    width: 100%;
+                    height: 100%;
+                }
+                .services-track {
+                    display: flex;
+                    transition: transform 0.5s ease-out;
+                    width: ${services.length * 100}%;
+                }
+                .service-item {
+                    width: ${100 / services.length}%;
+                    flex-shrink: 0;
+                    padding: 0 15px;
+                }
+                .services-navigation {
+                    position: absolute;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: flex;
+                    gap: 10px;
+                    z-index: 10;
+                }
+                .nav-dot {
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: #ddd;
+                    cursor: pointer;
+                    transition: background 0.3s ease;
+                }
+                .nav-dot.active {
+                    background: #FF3838;
+                }
+            </style>
+        `;
+        document.head.insertAdjacentHTML('beforeend', styleSheet);
+
+        // Create conveyor structure
+        container.innerHTML = `
+            <div class="services-conveyor">
+                <div class="services-track">
+                    ${services.map(service => `
+                        <div class="service-item">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="bi-why-choose-img1-area position-relative">
+                                        <div class="why-choose-img1">
+                                            <img src="${BASE_IMAGE_URL}${service.image}" alt="${service.nom_service}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="bi-why-choose-textarea">
+                                        <div class="bi-why-choose-text_1">
+                                            <div class="bi-section-title-4 bins-text headline">
+                                                <div class="sub-title position-relative pera-content text-uppercase">
+                                                    ${service.nom_service}
+                                                </div>
+                                                <h2 class="tx-split-text text-dark">
+                                                    ${service.nom_service.split('.')[0]}
+                                                </h2>
+                                                <p>${service.description}</p>
+                                            </div>
+                                            ${service.sous_service_titles?.length ? `
+                                                <div class="bi-why-choose-feature ul-li">
+                                                    <ul>
+                                                        ${service.sous_service_titles.map(title => 
+                                                            `<li class="text-dark">${title}</li>`
+                                                        ).join('')}
+                                                    </ul>
+                                                </div>
+                                            ` : ''}
+                                            <div class="bi-btn-4 text-uppercase">
+                                                <a href="service-single.html?id=${service.service_id}">
+                                                    Voir le service
+                                                    <span class="d-flex justify-content-center align-items-center">
+                                                        <img src="assets/img/icon/arrow.svg" alt="">
+                                                    </span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="services-navigation">
+                    ${services.map((_, i) => `
+                        <div class="nav-dot ${i === 0 ? 'active' : ''}" data-index="${i}"></div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        const track = container.querySelector('.services-track');
+        const dots = container.querySelectorAll('.nav-dot');
+        let currentIndex = 0;
+        let isAnimating = false;
+
+        // Handle wheel event
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (isAnimating) return;
+
+            const direction = e.deltaY > 0 ? 1 : -1;
+            const nextIndex = Math.min(Math.max(currentIndex + direction, 0), services.length - 1);
+            
+            if (nextIndex !== currentIndex) {
+                moveToIndex(nextIndex);
             }
-            // Update title and link
-            const title = card.querySelector('.portfolio-text h3 a');
-            if (title) {
-                title.textContent = pub.title || '';
-                title.href = `portfolio-single.html?id=${pub.id_publication}`;
-            }
-            // Remove all children from .portfolio-category and add a short description
-            const cat = card.querySelector('.portfolio-category');
-            if (cat) {
-                cat.innerHTML = `<p>${pub.description ? pub.description.substring(0, 80) + '...' : ''}</p>`;
-            }
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
+        });
+
+        // Handle dot navigation
+        dots.forEach(dot => {
+            dot.addEventListener('click', () => {
+                const index = parseInt(dot.dataset.index);
+                if (index !== currentIndex) {
+                    moveToIndex(index);
+                }
+            });
+        });
+
+        function moveToIndex(index) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            // Update dots
+            dots[currentIndex].classList.remove('active');
+            dots[index].classList.add('active');
+
+            // Move track
+            track.style.transform = `translateX(-${index * (100 / services.length)}%)`;
+            
+            currentIndex = index;
+
+            // Reset animation lock
+            setTimeout(() => {
+                isAnimating = false;
+            }, 500);
         }
-    });
+
+        // Auto advance every 5 seconds if no user interaction
+        let autoplayInterval = setInterval(() => {
+            if (!isAnimating) {
+                const nextIndex = (currentIndex + 1) % services.length;
+                moveToIndex(nextIndex);
+            }
+        }, 5000);
+
+        // Pause autoplay on hover
+        container.addEventListener('mouseenter', () => {
+            clearInterval(autoplayInterval);
+        });
+
+        // Resume autoplay on mouse leave
+        container.addEventListener('mouseleave', () => {
+            autoplayInterval = setInterval(() => {
+                if (!isAnimating) {
+                    const nextIndex = (currentIndex + 1) % services.length;
+                    moveToIndex(nextIndex);
+                }
+            }, 5000);
+        });
     }
 
     function renderCommentaires(avis) {

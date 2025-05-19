@@ -1,0 +1,21 @@
+    RewriteEngine On
+    RewriteBase /SFE-Project/client-frontend/
+
+    # Allow existing files and directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Define valid pages
+    RewriteCond %{REQUEST_URI} !^/(index-4\.html|about\.html|service\.html|produit-details\.html|portfolio-single\.html|blog-1\.html|blog-2\.html|404\.html)$ [NC]
+
+    # Redirect to 404
+    RewriteRule ^ 404.html [L]
+
+    # Prevent directory listing
+    Options -Indexes
+
+    # Protect sensitive files
+    <FilesMatch "^\.">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>

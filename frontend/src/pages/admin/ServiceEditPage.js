@@ -262,7 +262,7 @@ export default function ServiceEditPage() {
             has_new_main_image: !!mainImage,
             new_images_count: images.length
         });
-
+console.log(JSON.stringify(formDataToSend));
         const response = await fetch(API_URL, {
             method: "POST",
             credentials: 'include',
