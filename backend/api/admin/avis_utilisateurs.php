@@ -23,19 +23,24 @@ switch ($method) {
             }
 
         } else {
-            $result = $model->getAll();
+            $result = $model->getAll("Select au.*,p.title as title_publication, g.title as title_produit from avis_utilisateurs au left join publications p on au.id_publication = p.id_publication left join galeries g on g.id_galerie=au.id_produit;");
             $commmentaires = [];
             $avis = [];
+            $produits=[];
             foreach ($result as $avi) {
-                if ($avi['id_publication'] !== null || $avi['id_produit'] !== null) {
+                if ($avi['id_publication'] !== null) {
                     $commmentaires[]=$avi;
+                }elseif($avi['id_produit']!=null){                    
+                    $produits[]=$avi;
                 }else{
                     $avis[]=$avi;
+
                 }
             }
             echo json_encode([
                 'avis'=>$avis,
                 'commentaires'=>$commmentaires,
+                'produits'=>$produits,
                 'success' => true
             ]);
             break;

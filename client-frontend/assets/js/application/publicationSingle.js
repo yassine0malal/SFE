@@ -116,10 +116,28 @@ document.addEventListener("DOMContentLoaded", function () {
     if (window.publicationSwiper) window.publicationSwiper.destroy();
     window.publicationSwiper = new Swiper('.publication-images-swiper', {
       loop: true,
-      pagination: { el: '.swiper-pagination', clickable: true },
+      pagination: { 
+        el: '.swiper-pagination', 
+        clickable: true 
+      },
       navigation: {
         nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev'
+        prevEl: '.swiper-button-prev',
+      },
+      // Add custom classes for better styling control
+      on: {
+        init: function () {
+          const navigation = document.querySelectorAll('.swiper-button-next, .swiper-button-prev');
+          navigation.forEach(nav => {
+            nav.style.cssText = `
+              width: 50px;
+              height: 50px;
+              background-color: #FF3838;
+              border-radius: 50%;
+              color: #fff;
+            `;
+          });
+        }
       }
     });
 
@@ -128,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (titleEl) titleEl.textContent = pub.title || "Détails de Publication";
     const descEls = document.querySelectorAll(".bi-portfolio-details-content p");
     if (descEls.length > 0) descEls[0].textContent = pub.description || "";
-    if (descEls.length > 1) descEls[1].textContent = pub.site ? `Site: ${pub.site}` : "";
+    // if (descEls.length > 1) descEls[1].textContent = pub.site ? `Site: ${pub.site}` : "";
 
     // Sidebar Info
     const sidebar = document.querySelector(".bi-portfolio-sidebar ul");

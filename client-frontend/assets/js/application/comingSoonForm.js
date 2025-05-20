@@ -2,6 +2,29 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("coming-soon-form");
   if (!form) return;
 
+  // Add services fetch function
+  async function fetchServices() {
+    try {
+      const response = await fetch("/SFE-Project/backend/public/api/client/services", {
+        method: "GET",
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const services = await response.json();
+      injectCardServices(services);
+      
+    } catch (error) {
+      console.error("Error fetching services:", error);
+    }
+  }
+
+  // Call fetchServices when page loads
+  fetchServices();
+
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
     const value = form.elements["email"].value.trim();
@@ -40,4 +63,22 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Erreur réseau ou serveur.");
     }
   });
+
+  function injectCardServices(servicesComplet) {
+    const servicesCard = document.getElementById('servicesCard');
+    if (!servicesCard) return;
+
+    servicesCard.innerHTML = ''; // Clear existing content
+    
+    servicesComplet.forEach((service) => {
+      let a = document.createElement('a');
+      a.href = `service-single.html?id=${service.service_id}`;
+      
+      let li = document.createElement('li');
+      li.textContent = service.nom_service;
+      
+      a.appendChild(li);
+      servicesCard.appendChild(a);
+    });
+  }
 });

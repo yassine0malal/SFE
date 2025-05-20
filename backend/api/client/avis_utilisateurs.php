@@ -8,17 +8,21 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 switch ($method) {
     case 'GET':
-        if (isset($_GET['id_publication'])) {
-            // Récupérer tous les commentaires pour cette publication
-            $result = $model->getByPublicationId(htmlspecialchars($_GET['id_publication']));
-        } elseif (isset($_GET['id'])) {
-            $result = $model->getById($_GET['id']);
-        } elseif($_GET['id_produit']){
-            $result = $model->getByProduitId(htmlspecialchars($_GET['id_produit']));
-        }else {
-            $result = $model->getAll();
+        try {
+            if (isset($_GET['id_publication'])) {
+                $result = $model->getByPublicationId(htmlspecialchars($_GET['id_publication']));
+            } elseif (isset($_GET['id'])) {
+                $result = $model->getById($_GET['id']);
+            } elseif (isset($_GET['id_produit'])) { // Changed to isset()
+                $result = $model->getByProduitId(htmlspecialchars($_GET['id_produit']));
+            } else {
+                $result = $model->getAll();
+            }
+            echo json_encode($result);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => $e->getMessage()]);
         }
-        echo json_encode($result);
         break;
 
     case 'POST':

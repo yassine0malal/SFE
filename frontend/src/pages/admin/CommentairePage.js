@@ -20,7 +20,7 @@ function shuffleArray(array) {
 }
 
 export default function CommentairePage() {
-  const [comments, setComments] = useState({ commentaires: [], avis: [] });
+  const [comments, setComments] = useState({ commentaires: [], avis: [], produits: [] });
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({
@@ -60,12 +60,21 @@ export default function CommentairePage() {
             approuve: a.approuve === '1' ? 'accepted' : a.approuve === '0' ? 'rejected' : 'pending',
             type: 'avis'
           }));
-          setComments({ commentaires, avis });
+
+          // Process produits
+          const produits = data.produits.map((p, i) => ({
+            ...p,
+            couleur: shuffled[(i + commentaires.length + avis.length) % shuffled.length],
+            approuve: p.approuve === '1' ? 'accepted' : p.approuve === '0' ? 'rejected' : 'pending',
+            type: 'produit'
+          }));
+
+          setComments({ commentaires, avis, produits });
           console.log(JSON.stringify(comments))
         }
       } catch (e) {
         console.error(e);
-        setComments({ commentaires: [], avis: [] });
+        setComments({ commentaires: [], avis: [], produits: [] });
       } finally {
         setLoading(false);
       }
@@ -266,7 +275,8 @@ export default function CommentairePage() {
               {item.message}
             </div>
 
-            {item.id_publication && (
+            {/* Affichage du titre de la publication */}
+            {item.id_publication && item.title_publication && (
               <div style={{ 
                 fontSize: 13, 
                 color: "#666", 
@@ -274,9 +284,27 @@ export default function CommentairePage() {
                 padding: '8px 12px',
                 background: '#f1f3f5',
                 borderRadius: '6px',
+                display: 'inline-block',
+                marginRight: '10px'
+              }}>
+                <i className="fas fa-newspaper" style={{ marginRight: '5px' }}></i>
+                Publication: {item.title_publication}
+              </div>
+            )}
+
+            {/* Affichage du titre du produit */}
+            {item.id_produit && item.title_produit && (
+              <div style={{ 
+                fontSize: 13, 
+                color: "#666", 
+                marginBottom: '15px',
+                padding: '8px 12px',
+                background: '#e3f2fd',
+                borderRadius: '6px',
                 display: 'inline-block'
               }}>
-                ID Publication: {item.id_publication}
+                <i className="fas fa-box" style={{ marginRight: '5px' }}></i>
+                Produit: {item.title_produit}
               </div>
             )}
           </div>
@@ -446,6 +474,7 @@ export default function CommentairePage() {
           </div>
         ) : (
           <>
+            {/* Section Publications */}
             <div style={{ marginBottom: 40 }}>
               <h2 style={{ 
                 fontSize: 24,
@@ -455,13 +484,41 @@ export default function CommentairePage() {
                 paddingBottom: 10,
                 borderBottom: "2px solid #eee"
               }}>
-                Commentaires 
+                Commentaires des Publications 
               </h2>
               {comments.commentaires.map((item, idx) => 
                 renderItem(item, idx, 'commentaires')
               )}
+              {comments.commentaires.length === 0 && (
+                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  Aucun commentaire de publication pour le moment
+                </p>
+              )}
             </div>
 
+            {/* Section Produits */}
+            <div style={{ marginBottom: 40 }}>
+              <h2 style={{ 
+                fontSize: 24,
+                fontWeight: 600,
+                color: "#333",
+                marginBottom: 20,
+                paddingBottom: 10,
+                borderBottom: "2px solid #eee"
+              }}>
+                Commentaires des Produits
+              </h2>
+              {comments.produits.map((item, idx) => 
+                renderItem(item, idx, 'produits')
+              )}
+              {comments.produits.length === 0 && (
+                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  Aucun commentaire de produit pour le moment
+                </p>
+              )}
+            </div>
+
+            {/* Section Avis */}
             <div>
               <h2 style={{ 
                 fontSize: 24,
@@ -471,10 +528,15 @@ export default function CommentairePage() {
                 paddingBottom: 10,
                 borderBottom: "2px solid #eee"
               }}>
-                Avis 
+                Avis Généraux
               </h2>
               {comments.avis.map((item, idx) => 
                 renderItem(item, idx, 'avis')
+              )}
+              {comments.avis.length === 0 && (
+                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                  Aucun avis général pour le moment
+                </p>
               )}
             </div>
           </>

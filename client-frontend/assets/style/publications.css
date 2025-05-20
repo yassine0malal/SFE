@@ -1,29 +1,57 @@
-.blog-img-large img {
+/* Ajoutez ces styles dans publications.css */
+.bi-service-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 40px 0;
+}
+
+.bi-service-scroll-item {
+    height: 400px;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.bi-service-scroll-item:hover {
+    transform: translateY(-5px);
+}
+
+.service-img {
+    height: 100%;
+    overflow: hidden;
+}
+
+.service-img img {
     width: 100%;
-    max-width: 500px;
-    height: auto;
+    height: 100%;
     object-fit: cover;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-    margin: 20px 0;
-}
-@media (max-width: 991px) {
-    .blog-img-large img {
-        max-width: 100%;
-    }
-}
-/* Increase spacing between individual filter buttons */
-.bi-portfolio-filter-btn ul.nav-gallery li.filtr-button {
-    margin: 8px 12px !important; /* Horizontal and vertical margin */
-    padding: 10px 20px !important; /* Padding inside buttons */
+    transition: transform 0.5s ease;
 }
 
-/* Alternative approach using gap if you have a flex container */
-.bi-portfolio-filter-btn ul.nav-gallery {
+.service-text {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+}
+
+.service_more {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #FF3838;
     display: flex;
-    flex-wrap: wrap;
+    align-items: center;
     justify-content: center;
-    gap: 20px; /* Increased gap between buttons */
+    transition: all 0.3s ease;
 }
 
-
+.service_more:hover {
+    background: #cc2c2c;
+    transform: scale(1.1);
+}

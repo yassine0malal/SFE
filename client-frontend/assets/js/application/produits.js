@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </a>
                         <div class="blog-meta text-uppercase position-absolute" style="color=#000">
                             <i class="fas fa-money-bill-wave" style="color:#F1F507"></i>
-                            <div style="font-size:1.5rem; font-weight:bold; color:#E31A37; background:#fff; border-radius:8px; padding:8px 13px; display:inline-block; ">
+                            <div style="font-size:1.0rem; font-weight:bold; color:#E31A37; background:#fff; border-radius:0px 20px 20px 0px; padding:8px 7px; display:inline-block; ">
                                 ${
                                   hasPromotion
                                     ? `<span style="text-decoration: line-through; color: #888; font-size:1.0rem; margin-right:10px;">

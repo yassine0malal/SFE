@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
             injectservices(data.services);
             renderGaleries(data.galeries);     
             renderCommentaires(data.avis);
-            injectCardServices(data.publications);
+            injectCardServices(data.services);
             injectClients(data.clients);
             if (data.services && Array.isArray(data.services)) {
                 injectservices(data.services);
@@ -462,18 +462,18 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     //cards in the footer
-    function injectCardServices(servicesComplet){
-        const servicesCard = document.getElementById('servicesCard');
-        servicesComplet.forEach((service,idx)=>{
-            let a = document.createElement('a');
-            a.href=`service-single.html?id=${service.service_id}`
-            let li = document.createElement('li');
-            li.textContent=`${service.nom_service}`
-            a.appendChild(li);
-            servicesCard.appendChild(a)
-        })
+    // function injectCardServices(servicesComplet){
+    //     const servicesCard = document.getElementById('servicesCard');
+    //     servicesComplet.forEach((service,idx)=>{
+    //         let a = document.createElement('a');
+    //         a.href=`service-single.html?id=${service.service_id}`
+    //         let li = document.createElement('li');
+    //         li.textContent=`${service.nom_service}`
+    //         a.appendChild(li);
+    //         servicesCard.appendChild(a)
+    //     })
 
-    }
+    // }
 
     function injectClients(clients) {
         const clientsContainer = document.getElementById('clients-displaying');

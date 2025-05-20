@@ -1,249 +1,209 @@
 // Configuration
-const BASE_IMAGE_URL = 'http://localhost/SFE-Project/backend/public/uploads/';
+const BASE_IMAGE_URL = 'http://localhost/SFE-Project/backend/public/uploads/images/';
+const API_BASE_URL = '/SFE-Project/backend/public/api/client';
 let allPublications = [];
 let allServices = [];
 let currentFilter = 'all';
-const DEBUG = true;
 
-// Initialisation principale
+// Debug amélioré
+function debugLog(...messages) {
+    if (console && console.log) {
+        console.log('[DEBUG]', new Date().toISOString(), ...messages);
+    }
+}
+
+// Initialisation
 async function initializePage() {
     try {
-        if(DEBUG) console.log('[Initialisation] Démarrage...');
-
-        // Read filter from hash if present
-        const hash = window.location.hash;
-        if (hash.startsWith('#service=')) {
-            currentFilter = decodeURIComponent(hash.replace('#service=', ''));
-        }
-
+        debugLog('Début de l\'initialisation');
+        
         const [services, publications] = await Promise.all([
-            fetchData('/api/client/services'),
-            fetchData('/api/client/publications')
+            fetchData('/services'),
+            fetchData('/publications')
         ]);
 
-        if (!Array.isArray(services)) throw new Error('Format de services invalide');
-        if (!Array.isArray(publications)) throw new Error('Format de publications invalide');
+        debugLog('Services reçus:', services);
+        debugLog('Publications reçues:', publications);
+
+        if (!Array.isArray(services) || !Array.isArray(publications)) {
+            throw new Error(`Format de données invalide - 
+                Services: ${typeof services}, 
+                Publications: ${typeof publications}`);
+        }
 
         allServices = services;
         allPublications = publications;
 
         generateServiceFilters();
-        renderPublications();
+        handleHashFilter();
 
     } catch (error) {
+        debugLog('Erreur critique:', error);
         handleError(error);
     }
 }
 
-// Fonction générique pour les requêtes fetch
+// Fonction fetch améliorée
 async function fetchData(endpoint) {
+    const fullUrl = `${API_BASE_URL}${endpoint}`;
+    debugLog(`Tentative de fetch: ${fullUrl}`);
+
     try {
-        const response = await fetch(`/SFE-Project/backend/public${endpoint}`);
-        if(!response.ok) throw new Error(`HTTP ${response.status}`);
-        return await response.json();
+        const response = await fetch(fullUrl);
+        
+        debugLog(`Réponse reçue - Status: ${response.status}`, response);
+        
+        if (!response.ok) {
+            const errorBody = await response.text();
+            throw new Error(`HTTP ${response.status} - ${errorBody}`);
+        }
+
+        const data = await response.json();
+        debugLog(`Données reçues pour ${endpoint}:`, data);
+        
+        return data;
+
     } catch (error) {
-        throw new Error(`Échec de récupération ${endpoint}: ${error.message}`);
+        debugLog('Erreur fetch:', error);
+        throw new Error(`Échec de ${endpoint}: ${error.message}`);
     }
 }
 
-// Génération des filtres
 function generateServiceFilters() {
     const filtersContainer = document.getElementById('filters');
     if(!filtersContainer) return;
 
-    filtersContainer.innerHTML = '';
-    filtersContainer.appendChild(createFilterButton('all', 'Tous', currentFilter === 'all'));
+    filtersContainer.innerHTML = `
+        <li class="filtr-button filtr-active" data-filter="all">Tous</li>
+        ${allServices.map(service => `
+            <li class="filtr-button" 
+                data-filter="${service.service_id}"
+                data-id="${service.service_id}">
+                ${service.nom_service}
+            </li>
+        `).join('')}
+    `;
 
-    allServices.forEach(service => {
-        if(service.nom_service) {
-            filtersContainer.appendChild(
-                createFilterButton(
-                    service.nom_service,
-                    service.nom_service,
-                    currentFilter === service.nom_service
-                )
-            );
-        }
+    filtersContainer.querySelectorAll('.filtr-button').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            updateActiveFilter(this);
+            const filterValue = this.dataset.filter;
+            const serviceId = this.dataset.id;
+            filterAndRenderPublications(filterValue, serviceId);
+        });
     });
-
-    filtersContainer.addEventListener('click', handleFilterClick);
 }
 
-function createFilterButton(value, text, isActive = false) {
-    const button = document.createElement('li');
-    button.className = `filtr-button ${isActive ? 'filtr-active' : ''}`;
-    button.dataset.filter = value;
-    button.textContent = text;
-    return button;
-}
-
-function handleFilterClick(event) {
-    const target = event.target.closest('.filtr-button');
-    if (!target) return;
-
-    event.preventDefault();
-    currentFilter = target.dataset.filter;
-    if(DEBUG) console.log('[Filtre] Sélection:', currentFilter);
-
-    // Change the URL hash and reload the page
-    window.location.hash = `service=${encodeURIComponent(currentFilter)}`;
-    window.location.reload();
-}
-
-// Rendu des publications
-function renderPublications() {
+function filterAndRenderPublications(filterValue, serviceId) {
     const container = document.querySelector('.bi-blog-content');
     if (!container) return;
 
-    // Filtrer les publications visibles selon le filtre actif
-    const visibles = allPublications.filter(pub =>
-        currentFilter === 'all' ||
-        (pub.nom_service && pub.nom_service.toLowerCase().trim() === currentFilter.toLowerCase().trim())
-    );
-
-    if (visibles.length === 0) {
-        container.innerHTML = '<div class="col-12 text-center py-5"><p>Aucune publication trouvée.</p></div>';
-        return;
-    }
-
-    // Appliquer l'alternance sur les éléments visibles uniquement
-    container.innerHTML = visibles.map((pub, idx) => `
-        <div class="bi-blog-item bi-img-animation ${idx % 2 ? 'right_align_content' : ''}">
-            <div class="row">
-                ${idx % 2
-                    ? textColumn(pub) + imageColumn(getImagePath(pub), pub)
-                    : imageColumn(getImagePath(pub), pub) + textColumn(pub)
-                }
-            </div>
-        </div>
-    `).join('');
-}
-
-// Helper pour l'image
-function getImagePath(publication) {
-    let imagePath = 'assets/img/user/about.jpg';
-    try {
-        const images = parseImages(publication.images);
-        if(images.length > 0) {
-            const firstImage = images[0].trim().replace(/^\//, '');
-            imagePath = `${BASE_IMAGE_URL}${firstImage}`;
-        }
-    } catch (error) {}
-    return imagePath;
-}
-
-function renderPublicationItem(publication, index) {
-    if(!publication?.id_publication) {
-        console.warn('Publication invalide:', publication);
-        return '';
-    }
-
-    // Gestion des images
-    let imagePath = 'assets/img/user/about.jpg';
-    try {
-        const images = parseImages(publication.images);
-        if(images.length > 0) {
-            const firstImage = images[0].trim().replace(/^\//, '');
-            imagePath = `${BASE_IMAGE_URL}${firstImage}`;
-            
-            // Préchargement et gestion d'erreur
-            const img = new Image();
-            img.src = imagePath;
-            img.onerror = () => {
-                console.error(`Image manquante: ${imagePath}`);
-                imagePath = 'assets/img/user/about.jpg';
-            };
-        }
-    } catch (error) {
-        console.warn('Erreur traitement images:', error);
-    }
+    container.style.opacity = '0';
     
     setTimeout(() => {
-        document.querySelectorAll('.bi-blog-item').forEach(el => {
-            el.style.opacity = '1';
-            el.style.visibility = 'visible';
-            el.style.transform = 'none';
-        });
-    }, 1);
-    return `
-        <div class="bi-blog-item bi-img-animation ${index % 2 ? 'right_align_content' : ''}">
-            <div class="row">
-                ${index % 2 ? textColumn(publication) + imageColumn(imagePath, publication) 
-                           : imageColumn(imagePath, publication) + textColumn(publication)}
-            </div>
-        </div>
-    `;
+        const filteredPubs = filterValue === 'all' 
+            ? allPublications 
+            : allPublications.filter(pub => pub.id_service === serviceId);
+
+        renderPublications(filteredPubs, filterValue);
+        updateUrlHash(filterValue);
+        container.style.opacity = '1';
+        
+        if (typeof WOW === 'function') new WOW().init();
+    }, 300);
+}
+
+function renderPublications(publications, filterValue = 'all') {
+    const container = document.querySelector('.bi-blog-content');
+    const service = allServices.find(s => s.service_id === filterValue);
     
-}
-
-// Helpers
-function parseImages(images) {
-    if(!images) return [];
-    if(Array.isArray(images)) return images;
-    if(typeof images === 'string') {
-        try { return JSON.parse(images); } 
-        catch { return images.split(','); }
+    // Mise à jour du titre
+    const titleElement = document.getElementById('dynamic-title');
+    if(titleElement) {
+        titleElement.innerHTML = service 
+            ? `Réalisations ${service.nom_service}`
+            : 'Toutes nos réalisations';
     }
-    return [];
-}
 
-function imageColumn(imagePath, publication) {
-    return `
-        <div class="col-lg-6 d-flex align-items-center justify-content-center">
-            <div class="bi-blog-img blog-img-large">
-                <img src="${imagePath}" 
-                     alt="${publication.title || 'Image de publication'}" 
-                     onerror="this.src='assets/img/user/about.jpg'">
-            </div>
-        </div>
-    `;
-}
-
-function textColumn(publication) {
-    const description = publication.description 
-        ? `${publication.description.substring(0, 200)}${publication.description.length > 200 ? '...' : ''}`
-        : '';
-
-    return `
-        <div class="col-lg-6 d-flex align-items-center" >
-            <div class="bi-blog-text-area headline pera-content w-100">
-                <div class="bi-blog-meta text-uppercase position-relative">
-                    <a href="#"><i class="fal fa-calendar-alt"></i> ${publication.nom_service || ''}</a>
-                </div>
-                <div class="bi-blog-text">
-                    <h3 class="tx-split-text split-in-right">${publication.title || 'Sans titre'}</h3>
-                    <div class="bins-text">
-                        <p>${description}</p>
+    // Génération du contenu
+    container.innerHTML = `
+        <div class="bi-service-grid">
+            ${publications.map(pub => `
+                <div class="bi-service-scroll-item position-relative wow fadeInUp">
+                    <div class="service-img">
+                        <img src="${getImagePath(pub)}" alt="${pub.title}">
                     </div>
-                    <div class="bi-btn-1 bi-btn-area text-uppercase">
-                        <a class="bi-btn-main bi-btn-hover bi-btn-item" 
-                           href="portfolio-single.html?id=${publication.id_publication}">
-                            <span></span> Voir plus
+                    <div class="service-text headline d-flex position-absolute align-items-center justify-content-between">
+                        <h3><a href="portfolio-single.html?id=${pub.id_publication}">${pub.title}</a></h3>
+                        <a class="service_more" href="portfolio-single.html?id=${pub.id_publication}">
+                            <i class="fas fa-long-arrow-right"></i>
                         </a>
                     </div>
                 </div>
-            </div>
+            `).join('')}
         </div>
     `;
+}
+
+// Helper pour obtenir l'image principale
+function getImagePath(publication) {
+    if (publication.image_principale) {
+        return `${BASE_IMAGE_URL}${publication.image_principale}`;
+    }
+    return 'assets/img/user/about.jpg';
 }
 
 // Gestion des erreurs
 function handleError(error) {
-    console.error('[Erreur]', error);
+    console.error(error);
     const container = document.querySelector('.bi-blog-content');
     if(container) {
         container.innerHTML = `
-            <div class="col-12 text-center py-5">
-                <p class="text-danger">
-                    ${error.message}<br>
-                    Veuillez rafraîchir la page
-                </p>
+            <div class="error-message">
+                <p>Erreur de chargement des données. Veuillez réessayer.</p>
             </div>
         `;
     }
 }
 
-// Démarrage
+// Add this function to handle URL hash filtering
+function handleHashFilter() {
+    const hash = window.location.hash;
+    if (hash.startsWith('#service=')) {
+        const filterValue = decodeURIComponent(hash.replace('#service=', ''));
+        const filterButton = document.querySelector(`[data-filter="${filterValue}"]`);
+        if (filterButton) {
+            updateActiveFilter(filterButton);
+            const serviceId = filterButton.dataset.id;
+            filterAndRenderPublications(filterValue, serviceId);
+        }
+    } else {
+        // If no hash, render all publications
+        renderPublications(allPublications);
+    }
+}
+
+// Add this function to update active filter state
+function updateActiveFilter(button) {
+    const filtersContainer = document.getElementById('filters');
+    if (!filtersContainer) return;
+
+    filtersContainer.querySelectorAll('.filtr-button').forEach(btn => 
+        btn.classList.remove('filtr-active'));
+    button.classList.add('filtr-active');
+}
+
+// Add this function to update URL hash
+function updateUrlHash(filterValue) {
+    const newUrl = filterValue === 'all' 
+        ? window.location.pathname
+        : `${window.location.pathname}#service=${encodeURIComponent(filterValue)}`;
+    window.history.pushState({ filter: filterValue }, '', newUrl);
+}
+
+// Remove any Matter.js related code if you're not using it
 document.addEventListener('DOMContentLoaded', () => {
+    // Remove any Matter.js initialization if present
     initializePage();
 });
