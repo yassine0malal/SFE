@@ -83,13 +83,23 @@ export default function AbonnesPage() {
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [selectedPhones, setSelectedPhones] = useState([]);
   const [subject, setSubject] = useState("");
-
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formError, setFormError] = useState("");
   const fileInputRef = useRef(null);
-  // const [emailMode, setEmailMode] = useState('template'); // 'template' or 'custom'
+  const [emailMode, setEmailMode] = useState("custom");
+  const [templateFields, setTemplateFields] = useState({
+    logoUrl: "",
+    mainImage: "",
+    title: "",
+    subtitle: "",
+    sectionTitle: "",
+    body: "",
+    ctaTitle: "",
+    ctaText: "",
+    ctaUrl: "",
+  });
   const [customHtml, setCustomHtml] = useState("");
 
   useEffect(() => {
@@ -102,6 +112,29 @@ export default function AbonnesPage() {
       .catch(() => setError("Erreur lors du chargement des abonnés"))
       .finally(() => setLoading(false));
   }, []);
+
+  // Reset content when switching mode
+  const handleModeChange = (mode) => {
+    setEmailMode(mode);
+    setFormError("");
+    if (mode === "custom") {
+      // Clear template fields
+      setTemplateFields({
+        logoUrl: "",
+        mainImage: "",
+        title: "",
+        subtitle: "",
+        sectionTitle: "",
+        body: "",
+        ctaTitle: "",
+        ctaText: "",
+        ctaUrl: "",
+      });
+    } else if (mode === "template") {
+      // Clear custom HTML
+      setCustomHtml("");
+    }
+  };
 
   // Sélectionner/désélectionner tous les emails
   const toggleAllEmails = () => {
@@ -146,7 +179,10 @@ export default function AbonnesPage() {
       return (
         selectedEmails.length > 0 &&
         subject.trim() !== "" &&
-        customHtml.trim() !== "" // <-- use customHtml, not message
+        (emailMode === "custom"
+          ? customHtml.trim() !== ""
+          : templateFields.title.trim() !== "" &&
+            templateFields.body.trim() !== "")
       );
     }
     if (type === "whatsapp") {
@@ -163,13 +199,19 @@ export default function AbonnesPage() {
     }
 
     const emails = selectedEmails.map((i) => emailList[i]);
-    const payload = {
+    let payload = {
       emails,
       type,
       subject,
-      html: customHtml,
     };
-    console.log(payload); // <--- HERE
+
+    if (emailMode === "custom") {
+      payload.html = customHtml;
+    } else if (emailMode === "template") {
+      payload.html = renderToStaticMarkup(
+        <EmailTemplate {...templateFields} />
+      );
+    }
 
     try {
       const res = await fetch(
@@ -185,6 +227,20 @@ export default function AbonnesPage() {
       const data = await res.json();
       if (data.success) {
         alert("Message envoyé !");
+        // Optionally clear fields after send
+        if (emailMode === "custom") setCustomHtml("");
+        if (emailMode === "template")
+          setTemplateFields({
+            logoUrl: "",
+            mainImage: "",
+            title: "",
+            subtitle: "",
+            sectionTitle: "",
+            body: "",
+            ctaTitle: "",
+            ctaText: "",
+            ctaUrl: "",
+          });
       } else {
         alert("Erreur : " + (data.error || "Envoi échoué"));
       }
@@ -363,213 +419,443 @@ export default function AbonnesPage() {
             ))}
           </>
         )}
-
-        {/* Email Mode Selection */}
-        <div style={{ marginTop: 40, marginBottom: 30 }}>
-          <div style={{ display: "flex", gap: 15 }}>
-            <button
-              style={{
-                padding: "10px 20px",
-                background: "#FF5C78",
-                color: "#fff",
-                border: "1px solid #FF5C78",
-                borderRadius: 8,
-                cursor: "pointer",
-                flex: 1,
-              }}
-            >
-              L'envoi d'email 
-            </button>
-          </div>
-        </div>
-
-        {/* Conditional rendering based on email mode */}
-
-        <div style={{ marginTop: 40 }}>
-          <div style={{ marginBottom: 20 }}>
-            <div
-              style={{ display: "flex", flexDirection: "column", gap: "20px" }}
-            >
-              {/* Subject Input */}
-              <div>
-                <h3>Objet de l'email :</h3>
-                <input
-                  type="text"
-                  value={subject}
-                  onChange={(e) => setSubject(e.target.value)}
-                  style={{
-                    width: "100%",
-                    borderRadius: 8,
-                    border: "1px solid #ccc",
-                    padding: 12,
-                    fontSize: 16,
-                    marginBottom: 20,
-                  }}
-                  placeholder="Sujet de l'email"
-                />
-              </div>
-
-              {/* Editor and Preview Container */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  minHeight: "300px",
-                  height: "auto",
-                }}
-              >
-                {/* Editor */}
-                <div
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    flexDirection: "column",
-                    minWidth: "400px",
-                    position: "relative",
-                  }}
-                >
-                  <ReactQuill
-                    theme="snow"
-                    value={customHtml}
-                    onChange={(content) => {
-                      setCustomHtml(content);
-                      // Force preview update
-                      const previewDiv =
-                        document.getElementById("preview-content");
-                      if (previewDiv) {
-                        previewDiv.innerHTML = content;
-                      }
-                    }}
-                    modules={modules}
-                    formats={[
-                      "header",
-                      "bold",
-                      "italic",
-                      "underline",
-                      "strike",
-                      "blockquote",
-                      "code-block",
-                      "list",
-                      "bullet",
-                      "script",
-                      "indent",
-                      "color",
-                      "background",
-                      "align",
-                      "link",
-                      "image",
-                      "html",
-                    ]}
-                    style={{
-                      height: "auto",
-                      minHeight: "600px",
-                      display: "flex",
-                      flexDirection: "column",
-                    }}
-                  />
-                </div>
-
-                {/* Live Preview - Made larger and flexible */}
-                <div
-                  style={{
-                    flex: 2,
-                    border: "1px solid #ccc",
-                    borderRadius: 8,
-                    backgroundColor: "#fff",
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "auto",
-                    minHeight: "600px",
-                    position: "relative",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: 0,
-                      color: "#666",
-                      padding: "15px 20px",
-                      borderBottom: "1px solid #eee",
-                      background: "#fff",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 1,
-                    }}
-                  >
-                    Preview:
-                  </h4>
-                  <div
-                    id="preview-content"
-                    style={{
-                      padding: "20px",
-                      overflowY: "auto",
-                      flex: 1,
-                      minHeight: "500px",
-                      height: "auto",
-                    }}
-                    dangerouslySetInnerHTML={{ __html: customHtml }}
-                  />
-                </div>
-              </div>
-
-              {/* Source HTML View */}
-              <div style={{ marginTop: "20px" }}>
-                <details>
-                  <summary
-                    style={{
-                      cursor: "pointer",
-                      color: "#666",
-                      marginBottom: "10px",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    View/Edit HTML Source
-                  </summary>
-                  <textarea
-                  readOnly
-                    value={customHtml}
-                    onChange={(e) => setCustomHtml(e.target.value)}
+<div>
+                  <h3>Objet de l'email :</h3>
+                  <input
+                    type="text"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
                     style={{
                       width: "100%",
-                      height: "200px",
-                      padding: "10px",
-                      fontFamily: "monospace",
-                      fontSize: "14px",
+                      borderRadius: 8,
                       border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      marginTop: "10px",
+                      padding: 12,
+                      fontSize: 16,
+                      marginBottom: 20,
+                    }}
+                    placeholder="Sujet de l'email"
+                  />
+                </div>
+        {/* Email Mode Selection */}
+        <div style={{ margin: "30px 0 20px 0", display: "flex", gap: 20 }}>
+          <label>
+            <input
+              type="radio"
+              checked={emailMode === "custom"}
+              onChange={() => handleModeChange("custom")}
+            />{" "}
+            Email personnalisé (éditeur HTML)
+          </label>
+          <label>
+            <input
+              type="radio"
+              checked={emailMode === "template"}
+              onChange={() => handleModeChange("template")}
+            />{" "}
+            Utiliser un template
+          </label>
+        </div>
+
+        {/* Formulaire du template */}
+        {emailMode === "template" && (
+          <div style={{ marginBottom: 30 }}>
+            <h3>Remplir le template :</h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Logo */}
+              <label style={{ fontWeight: 500, color: "#333" }}>
+                Logo :
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "block", margin: "8px 0 12px 0" }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) =>
+                      setTemplateFields((f) => ({
+                        ...f,
+                        logoUrl: ev.target.result,
+                      }));
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                {templateFields.logoUrl && (
+                  <img
+                    src={templateFields.logoUrl}
+                    alt="Logo"
+                    style={{
+                      maxWidth: 120,
+                      maxHeight: 60,
+                      margin: "8px 0",
+                      borderRadius: 6,
+                      border: "1px solid #eee",
+                      background: "#fafafa",
+                      display: "block",
                     }}
                   />
-                </details>
+                )}
+              </label>
+              {/* Main Image */}
+              <label style={{ fontWeight: 500, color: "#333" }}>
+                Image principale :
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "block", margin: "8px 0 12px 0" }}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = (ev) =>
+                      setTemplateFields((f) => ({
+                        ...f,
+                        mainImage: ev.target.result,
+                      }));
+                    reader.readAsDataURL(file);
+                  }}
+                />
+                {templateFields.mainImage && (
+                  <img
+                    src={templateFields.mainImage}
+                    alt="Main"
+                    style={{
+                      maxWidth: 300,
+                      maxHeight: 120,
+                      margin: "8px 0",
+                      borderRadius: 8,
+                      border: "1px solid #eee",
+                      background: "#fafafa",
+                      display: "block",
+                    }}
+                  />
+                )}
+              </label>
+              {/* Other fields */}
+              <input
+                type="text"
+                placeholder="Titre"
+                value={templateFields.title}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({ ...f, title: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Sous-titre"
+                value={templateFields.subtitle}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({ ...f, subtitle: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Titre de section"
+                value={templateFields.sectionTitle}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({
+                    ...f,
+                    sectionTitle: e.target.value,
+                  }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+              <textarea
+                placeholder="Contenu principal (HTML autorisé)"
+                value={templateFields.body}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({ ...f, body: e.target.value }))
+                }
+                style={{
+                  minHeight: 80,
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Titre du bouton"
+                value={templateFields.ctaTitle}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({ ...f, ctaTitle: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Texte du bouton"
+                value={templateFields.ctaText}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({ ...f, ctaText: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+              <input
+                type="text"
+                placeholder="URL du bouton"
+                value={templateFields.ctaUrl}
+                onChange={(e) =>
+                  setTemplateFields((f) => ({ ...f, ctaUrl: e.target.value }))
+                }
+                style={{
+                  padding: 10,
+                  borderRadius: 6,
+                  border: "1px solid #ccc",
+                  marginBottom: 4,
+                }}
+              />
+            </div>
+            <div
+              style={{
+                marginTop: 20,
+                border: "1px solid #eee",
+                borderRadius: 8,
+                padding: 16,
+              }}
+            >
+              <h4>Aperçu du template :</h4>
+              <div style={{ background: "#f9f9f9", padding: 16 }}>
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: renderToStaticMarkup(
+                      <EmailTemplate {...templateFields} />
+                    ),
+                  }}
+                />
               </div>
             </div>
+            {/* Submit button for template */}
+            <div style={{ display: "flex", gap: 16, marginTop: 30 }}>
+              <button
+                onClick={() => handleSend("email")}
+                disabled={
+                  !selectedEmails.length ||
+                  !subject.trim() ||
+                  !templateFields.title.trim() ||
+                  !templateFields.body.trim()
+                }
+                style={{
+                  background: "#0072c6",
+                  color: "#fff",
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "1rem 2rem",
+                  cursor: "pointer",
+                  flex: 1,
+                }}
+              >
+                Envoyer par Email (Template)
+              </button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Conditional rendering based on email mode */}
+        {emailMode === "custom" && (
+          <div style={{ marginTop: 40 }}>
+            <div style={{ marginBottom: 20 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+              >
+                {/* Subject Input */}
+                
+
+                {/* Editor and Preview Container */}
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "20px",
+                    minHeight: "300px",
+                    height: "auto",
+                  }}
+                >
+                  {/* Editor */}
+                  <div
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      minWidth: "400px",
+                      position: "relative",
+                    }}
+                  >
+                    <ReactQuill
+                      theme="snow"
+                      value={customHtml}
+                      onChange={(content) => {
+                        setCustomHtml(content);
+                        // Force preview update
+                        const previewDiv =
+                          document.getElementById("preview-content");
+                        if (previewDiv) {
+                          previewDiv.innerHTML = content;
+                        }
+                      }}
+                      modules={modules}
+                      formats={[
+                        "header",
+                        "bold",
+                        "italic",
+                        "underline",
+                        "strike",
+                        "blockquote",
+                        "code-block",
+                        "list",
+                        "bullet",
+                        "script",
+                        "indent",
+                        "color",
+                        "background",
+                        "align",
+                        "link",
+                        "image",
+                        "html",
+                      ]}
+                      style={{
+                        height: "auto",
+                        minHeight: "600px",
+                        display: "flex",
+                        flexDirection: "column",
+                      }}
+                    />
+                  </div>
+
+                  {/* Live Preview - Made larger and flexible */}
+                  <div
+                    style={{
+                      flex: 2,
+                      border: "1px solid #ccc",
+                      borderRadius: 8,
+                      backgroundColor: "#fff",
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "auto",
+                      minHeight: "600px",
+                      position: "relative",
+                    }}
+                  >
+                    <h4
+                      style={{
+                        margin: 0,
+                        color: "#666",
+                        padding: "15px 20px",
+                        borderBottom: "1px solid #eee",
+                        background: "#fff",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 1,
+                      }}
+                    >
+                      Preview:
+                    </h4>
+                    <div
+                      id="preview-content"
+                      style={{
+                        padding: "20px",
+                        overflowY: "auto",
+                        flex: 1,
+                        minHeight: "500px",
+                        height: "auto",
+                      }}
+                      dangerouslySetInnerHTML={{ __html: customHtml }}
+                    />
+                  </div>
+                </div>
+
+                {/* Source HTML View */}
+                <div style={{ marginTop: "20px" }}>
+                  <details>
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        color: "#666",
+                        marginBottom: "10px",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      View/Edit HTML Source
+                    </summary>
+                    <textarea
+                      readOnly
+                      value={customHtml}
+                      onChange={(e) => setCustomHtml(e.target.value)}
+                      style={{
+                        width: "100%",
+                        height: "200px",
+                        padding: "10px",
+                        fontFamily: "monospace",
+                        fontSize: "14px",
+                        border: "1px solid #ccc",
+                        borderRadius: "4px",
+                        marginTop: "10px",
+                      }}
+                    />
+                  </details>
+                </div>
+              </div>
+            </div>
+            {/* Submit button for custom */}
+            <div style={{ display: "flex", gap: 16, marginTop: 30 }}>
+              <button
+                onClick={() => handleSend("email")}
+                disabled={
+                  !selectedEmails.length ||
+                  !subject.trim() ||
+                  !customHtml.trim()
+                }
+                style={{
+                  background: "#0072c6",
+                  color: "#fff",
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "1rem 2rem",
+                  cursor: "pointer",
+                  flex: 1,
+                }}
+              >
+                Envoyer par Email (Personnalisé)
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Message d'erreur si champs obligatoires manquants */}
         {formError && (
           <div style={{ color: "red", marginBottom: 16 }}>{formError}</div>
         )}
-
-        {/* Boutons d'envoi */}
-        <div style={{ display: "flex", gap: 16, marginTop: 30 }}>
-          <button
-            onClick={() => handleSend("email")}
-            disabled={!isFormValid("email")}
-            style={{
-              background: "#0072c6",
-              color: "#fff",
-              fontWeight: "bold",
-              fontSize: "1.1rem",
-              border: "none",
-              borderRadius: 8,
-              padding: "1rem 2rem",
-              cursor: "pointer",
-              flex: 1,
-            }}
-          >
-            Envoyer par Email
-          </button>
-        </div>
       </div>
     </div>
   );

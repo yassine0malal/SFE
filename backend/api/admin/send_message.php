@@ -12,8 +12,7 @@ $data = json_decode(file_get_contents('php://input'), true);
 if (
     !isset($data['type']) || $data['type'] !== 'email' ||
     !isset($data['emails']) || !is_array($data['emails']) || count($data['emails']) === 0 ||
-    !isset($data['subject']) || trim($data['subject']) === '' ||
-    !isset($data['html']) || trim($data['html']) === ''
+    !isset($data['subject']) || trim($data['subject']) === ''
 ) {
     http_response_code(400);
     echo json_encode(['error' => 'Champs obligatoires manquants']);
@@ -21,10 +20,83 @@ if (
 }
 
 $subject = $data['subject'];
-$html = $data['html'];
 $societyName = "web design development";
 
+// 1. Get HTML content: either from 'html' or from a template
+$html = '';
+if (!empty($data['html'])) {
+    $html = $data['html'];
+} elseif (!empty($data['template'])) {
+    // Example: load a template file and replace variables
+    $templateName = basename($data['template']);
+    $templatePath = __DIR__ . "/../../templates/emails/{$templateName}.html";
+    if (file_exists($templatePath)) {
+        $html = file_get_contents($templatePath);
+    } else {
+        http_response_code(400);
+        echo json_encode(['error' => 'Template introuvable']);
+        exit;
+    }
+} else {
+    http_response_code(400);
+    echo json_encode(['error' => 'Aucun contenu HTML ou template fourni']);
+    exit;
+}
+
+// 2. Prepare embedded images (base64)
 $embeddedImages = [];
+
+// Handle logoUrl and mainImage as base64 images (for template)
+if (preg_match('/<img[^>]+src="([^"]+)"[^>]*alt="Logo"[^>]*>/i', $html, $logoMatch)) {
+    $logoSrc = $logoMatch[1];
+    if (strpos($logoSrc, 'data:image/') === 0) {
+        if (preg_match('/data:image\/([^;]+);base64,(.+)/', $logoSrc, $imgParts)) {
+            $ext = $imgParts[1];
+            $base64 = $imgParts[2];
+            $imgData = base64_decode($base64);
+            $filename = uniqid('logo_', true) . '.' . $ext;
+            $filePath = __DIR__ . '/../../public/uploads/emails/' . $filename;
+            if (!file_exists(dirname($filePath))) {
+                mkdir(dirname($filePath), 0777, true);
+            }
+            file_put_contents($filePath, $imgData);
+            $cid = 'logo_' . uniqid();
+            $embeddedImages[] = [
+                'path' => $filePath,
+                'cid' => $cid,
+                'ext' => $ext,
+            ];
+            // Remplace src par cid dans le HTML
+            $html = str_replace($logoSrc, "cid:$cid", $html);
+        }
+    }
+}
+
+if (preg_match('/<img[^>]+src="([^"]+)"[^>]*alt="Main"[^>]*>/i', $html, $mainMatch)) {
+    $mainSrc = $mainMatch[1];
+    if (strpos($mainSrc, 'data:image/') === 0) {
+        if (preg_match('/data:image\/([^;]+);base64,(.+)/', $mainSrc, $imgParts)) {
+            $ext = $imgParts[1];
+            $base64 = $imgParts[2];
+            $imgData = base64_decode($base64);
+            $filename = uniqid('main_', true) . '.' . $ext;
+            $filePath = __DIR__ . '/../../public/uploads/emails/' . $filename;
+            if (!file_exists(dirname($filePath))) {
+                mkdir(dirname($filePath), 0777, true);
+            }
+            file_put_contents($filePath, $imgData);
+            $cid = 'main_' . uniqid();
+            $embeddedImages[] = [
+                'path' => $filePath,
+                'cid' => $cid,
+                'ext' => $ext,
+            ];
+            // Remplace src par cid dans le HTML
+            $html = str_replace($mainSrc, "cid:$cid", $html);
+        }
+    }
+}
+
 if (preg_match_all('/<img([^>]+)src="data:image\/([^;]+);base64,([^"]+)"([^>]*)>/i', $html, $matches, PREG_SET_ORDER)) {
     $uploadDir = __DIR__ . '/../../public/uploads/emails/';
     if (!file_exists($uploadDir)) {
@@ -56,7 +128,15 @@ $success = true;
 $errors = [];
 $atLeastOneSent = false;
 
-foreach ($data['emails'] as $email) {
+// 3. Send personalized email to each recipient
+foreach ($data['emails'] as $recipient) {
+    // Personalize: if $recipient is an array with 'email' and 'name'
+    $email = is_array($recipient) ? $recipient['email'] : $recipient;
+    $name = is_array($recipient) && isset($recipient['name']) ? $recipient['name'] : '';
+
+    // Replace {{name}} in HTML if present
+    $personalizedHtml = str_replace('{{name}}', htmlspecialchars($name), $html);
+
     $mail = new PHPMailer(true);
     try {
         $mail->isSMTP();
@@ -68,15 +148,14 @@ foreach ($data['emails'] as $email) {
         $mail->Port = 587;
 
         $mail->setFrom('malalyassin6@gmail.com', $societyName);
-        $mail->addAddress($email);
+        $mail->addAddress($email, $name);
 
-        // Ajoute ces deux lignes :
         $mail->CharSet = 'UTF-8';
         $mail->Encoding = 'base64';
 
         $mail->isHTML(true);
         $mail->Subject = $subject;
-        $mail->Body = $html;
+        $mail->Body = $personalizedHtml;
 
         // Attach embedded images
         foreach ($embeddedImages as $img) {
