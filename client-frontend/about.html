@@ -773,6 +773,7 @@
         <div class="col-md-12">
             <textarea name="message" placeholder="Votre message" required></textarea>
         </div>
+		<div class="g-recaptcha" data-sitekey="6Ldzx0ErAAAAABMfujixqYBmuoHoJ7aSoNBhbEdk"></div>
         <div class="col-md-12">
             <div class="bi-submit-btn">
                 <button type="submit">Envoyer Un Avis</button>
@@ -866,8 +867,9 @@
 							<div class="footer-subscription-form" style="position: relative; padding: 20px 0;">
 								<form action="/SFE-Project/backend/api/client/abonnees.php" method="post"
 									id="coming-soon-form">
-									<input type="text" name="email" placeholder="E-mail / Tel"
-										required>
+									<input type="text" name="email" placeholder="E-mail / Tel" required>
+									<input type="hidden" name="csrf_token" id="csrf_token_coming_soon">
+									<div class="g-recaptcha" data-sitekey="6Ldzx0ErAAAAABMfujixqYBmuoHoJ7aSoNBhbEdk"></div>
 									<button type="submit">Envoyer</button>
 								</form>
 							</div>
@@ -937,6 +939,8 @@
 	<script src="assets/js/tilt.jquery.min.js"></script>
 	<script src="assets/js/matter.min.js"></script>
 	<script src="assets/js/script.js"></script>
+	<script src="assets/js/application/comingSoonForm.js"></script>
+	<script src="https://www.google.com/recaptcha/api.js" async defer></script>
 	<script src="assets/js/application/about.js"></script>
 </body>
 

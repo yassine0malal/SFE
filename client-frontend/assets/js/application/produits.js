@@ -69,14 +69,14 @@ document.addEventListener('DOMContentLoaded', function() {
                             <img src="${image}" alt="${prod.title || ""}">
                         </a>
                         <div class="blog-meta text-uppercase position-absolute" style="color=#000">
-                            <i class="fas fa-money-bill-wave" style="color:#F1F507"></i>
-                            <div style="font-size:1.0rem; font-weight:bold; color:#E31A37; background:#fff; border-radius:0px 20px 20px 0px; padding:8px 7px; display:inline-block; ">
+                            <i class="fas fa-money-bill-wave" style="color:#fff;size:1.5rem; margin-right:5px; " ></i>
+                            <div style="font-size:1.0rem; font-weight:bold; color:#E31A37; border-radius:0px 20px 20px 0px; padding:8px 7px; display:inline-block; ">
                                 ${
                                   hasPromotion
-                                    ? `<span style="text-decoration: line-through; color: #888; font-size:1.0rem; margin-right:10px;">
+                                    ? `<span style="text-decoration: line-through; font-size:1.0rem; margin-right:10px; color:#fff;">
                                           ${prod.prix} DH
                                        </span>
-                                       <span style="color:#F1C507; font-size:1.2rem;">
+                                       <span style="color:rgb(246, 255, 0); font-size:1.2rem;">
                                           ${discountedPrice.toFixed(2)} DH
                                        </span>`
                                     : `<span style="color:#E31A37;"><strong>${prod.prix}</strong> DH</span>`

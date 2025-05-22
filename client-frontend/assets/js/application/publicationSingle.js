@@ -42,7 +42,9 @@ document.addEventListener("DOMContentLoaded", function () {
 				<h1 style="color: #FF3838;"><b>Voir les Commentaires</b></h1>
 			</div> <br> <br><br>
         <div class="bi-testimonial-item d-flex">
-          <div class="testimonial-img"></div>
+          <div class="testimonial-img">
+          <img src="assets/img/user/${comment.sex =='male' ? 'comment-man.jpg':'women-comment.jpg'}" alt="Testimonial Image">
+          </div>
           <div class="testimonial-text headline pera-content">
 		
 		 
@@ -197,6 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const message = form.elements["message"].value.trim();
       const csrfToken = form.elements["csrf_token"].value.trim();
       const id_publication = form.elements["id_publication"].value.trim();
+      const recaptcha = form.elements["g-recaptcha-response"]?.value || "";
 
       let errors = [];
       if (!nom_prenom) errors.push("Le nom est requis.");
@@ -212,7 +215,8 @@ document.addEventListener("DOMContentLoaded", function () {
         nom_prenom,
         message,
         csrf_token: csrfToken,
-        id_publication
+        id_publication,
+        g_recaptcha_response: recaptcha        
       };
       try {
         const response = await fetch("/SFE-Project/backend/public/api/client/avis_utilisateurs", {

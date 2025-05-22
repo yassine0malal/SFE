@@ -476,43 +476,59 @@ export default function CommentairePage() {
           <>
             {/* Section Publications */}
             <div style={{ marginBottom: 40 }}>
-              <h2 style={{ 
-                fontSize: 24,
-                fontWeight: 600,
-                color: "#333",
-                marginBottom: 20,
-                paddingBottom: 10,
-                borderBottom: "2px solid #eee"
-              }}>
-                Commentaires des Publications 
+              <h2
+                style={{
+                  fontSize: 24,
+                  fontWeight: 600,
+                  color: "#333",
+                  marginBottom: 20,
+                  paddingBottom: 10,
+                  borderBottom: "2px solid #eee",
+                }}
+              >
+                Commentaires des Réalisations
               </h2>
-              {comments.commentaires.map((item, idx) => 
-                renderItem(item, idx, 'commentaires')
+              {comments.commentaires.map((item, idx) =>
+                renderItem(item, idx, "commentaires")
               )}
               {comments.commentaires.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-                  Aucun commentaire de publication pour le moment
+                <p
+                  style={{
+                    textAlign: "center",
+                    color: "#666",
+                    padding: "20px",
+                  }}
+                >
+                  Aucun commentaire de Réalisation pour le moment
                 </p>
               )}
             </div>
 
             {/* Section Produits */}
             <div style={{ marginBottom: 40 }}>
-              <h2 style={{ 
-                fontSize: 24,
-                fontWeight: 600,
-                color: "#333",
-                marginBottom: 20,
-                paddingBottom: 10,
-                borderBottom: "2px solid #eee"
-              }}>
+              <h2
+                style={{
+                  fontSize: 24,
+                  fontWeight: 600,
+                  color: "#333",
+                  marginBottom: 20,
+                  paddingBottom: 10,
+                  borderBottom: "2px solid #eee",
+                }}
+              >
                 Commentaires des Produits
               </h2>
-              {comments.produits.map((item, idx) => 
-                renderItem(item, idx, 'produits')
+              {comments.produits.map((item, idx) =>
+                renderItem(item, idx, "produits")
               )}
               {comments.produits.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                <p
+                  style={{
+                    textAlign: "center",
+                    color: "#666",
+                    padding: "20px",
+                  }}
+                >
                   Aucun commentaire de produit pour le moment
                 </p>
               )}
@@ -520,21 +536,27 @@ export default function CommentairePage() {
 
             {/* Section Avis */}
             <div>
-              <h2 style={{ 
-                fontSize: 24,
-                fontWeight: 600,
-                color: "#333",
-                marginBottom: 20,
-                paddingBottom: 10,
-                borderBottom: "2px solid #eee"
-              }}>
+              <h2
+                style={{
+                  fontSize: 24,
+                  fontWeight: 600,
+                  color: "#333",
+                  marginBottom: 20,
+                  paddingBottom: 10,
+                  borderBottom: "2px solid #eee",
+                }}
+              >
                 Avis Généraux
               </h2>
-              {comments.avis.map((item, idx) => 
-                renderItem(item, idx, 'avis')
-              )}
+              {comments.avis.map((item, idx) => renderItem(item, idx, "avis"))}
               {comments.avis.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                <p
+                  style={{
+                    textAlign: "center",
+                    color: "#666",
+                    padding: "20px",
+                  }}
+                >
                   Aucun avis général pour le moment
                 </p>
               )}

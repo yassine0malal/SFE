@@ -329,16 +329,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (form) {
         form.addEventListener("submit", async function(e) {
             e.preventDefault();
-            
+
             const nom_prenom = form.elements["name"].value.trim();
             const message = form.elements["message"].value.trim();
             const csrfToken = form.elements["csrf_token"]?.value;
-            const id_produit = productId;
+            const recaptcha = form.elements["g-recaptcha-response"]?.value || "";
 
+            // Validation
             let errors = [];
             if (!nom_prenom) errors.push("Le nom est requis.");
             if (!message) errors.push("Le message est requis.");
             if (!csrfToken) errors.push("Token CSRF manquant.");
+            if (!recaptcha) errors.push("Veuillez valider le reCAPTCHA.");
 
             if (errors.length > 0) {
                 alert(errors.join("\n"));
@@ -349,7 +351,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 nom_prenom,
                 message,
                 csrf_token: csrfToken,
-                id_produit
+                g_recaptcha_response: recaptcha
             };
 
             try {

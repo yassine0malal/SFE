@@ -3,7 +3,6 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../../includes/auth.php';
 requireAdminAuth();
 
-// PHPMailer
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -11,91 +10,99 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (
-    (!isset($data['message']) && empty($data['html'])) ||
-    (!isset($data['emails']) && !isset($data['phones'])) ||
-    !isset($data['type'])
+    !isset($data['type']) || $data['type'] !== 'email' ||
+    !isset($data['emails']) || !is_array($data['emails']) || count($data['emails']) === 0 ||
+    !isset($data['subject']) || trim($data['subject']) === '' ||
+    !isset($data['html']) || trim($data['html']) === ''
 ) {
     http_response_code(400);
-    echo json_encode(['error' => 'Champs manquants']);
+    echo json_encode(['error' => 'Champs obligatoires manquants']);
     exit;
 }
 
-$message = $data['message'] ?? '';
-$type = $data['type'];
-$societyName = "web design development"; 
+$subject = $data['subject'];
+$html = $data['html'];
+$societyName = "web design development";
 
-// NEW: Get subject and footer from frontend
-$subject = !empty($data['subject']) ? $data['subject'] : "Message de $societyName";
-$footer = !empty($data['footer']) ? $data['footer'] : null;
-
-if ($type === "email" && !empty($data['emails'])) {
-   
-    if (!empty($data['html'])) {
-        $body = $data['html'];
-    } else {
-        $body = nl2br($message);
-        if (!empty($footer)) {
-            $body .= "<br><br><div style=\"color:#888;\">$footer</div>";
-        }
-        $body .= "<br><br>--<br>$societyName<br>Contact: malalyassin6@gmail.com <br> Phone: +212 702-080102<br>Website: www.webdesign-development.com";
+$embeddedImages = [];
+if (preg_match_all('/<img([^>]+)src="data:image\/([^;]+);base64,([^"]+)"([^>]*)>/i', $html, $matches, PREG_SET_ORDER)) {
+    $uploadDir = __DIR__ . '/../../public/uploads/emails/';
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
     }
-    $success = true;
-    $errors = [];
+    foreach ($matches as $i => $img) {
+        $ext = $img[2];
+        $base64 = $img[3];
+        $imgData = base64_decode($base64);
+        $filename = uniqid('img_', true) . '.' . $ext;
+        $filePath = $uploadDir . $filename;
+        file_put_contents($filePath, $imgData);
 
-    foreach ($data['emails'] as $email) {
-        $mail = new PHPMailer(true);
-        try {
-            
-            $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
-            $mail->SMTPAuth = true;
-            $mail->Username = 'malalyassin6@gmail.com';
-            $mail->Password = 'eixm kiqf enqf vnov'; 
-            $mail->SMTPSecure = 'tls';
-            $mail->Port = 587;
+        // Generate a unique CID for this image
+        $cid = 'img' . $i . '_' . uniqid();
+        $embeddedImages[] = [
+            'path' => $filePath,
+            'cid' => $cid,
+            'ext' => $ext,
+        ];
 
-            $mail->setFrom('malalyassin6@gmail.com', $societyName);
-            $mail->addAddress($email);
-            $mail->isHTML(true);
-            $mail->Subject = $subject;
-
-            // IMPORTANT : utiliser une copie du body pour chaque email
-            $bodyForThisMail = $body;
-
-            // 1. Gérer le logo statique comme CID
-            if (preg_match('/src="images\/logo\.png"/', $bodyForThisMail)) {
-                $logoPath = __DIR__ . '/../../public/uploads/images/logo.png'; // <-- Chemin correct
-                if (file_exists($logoPath)) {
-                    $logoCid = uniqid('logocid');
-                    $mail->addEmbeddedImage($logoPath, $logoCid, 'logo.png');
-                    $bodyForThisMail = str_replace('src="images/logo.png"', 'src="cid:' . $logoCid . '"', $bodyForThisMail);
-                }
-            }
-
-            // 2. Gérer l'image principale envoyée par l'utilisateur (base64)
-            if (preg_match('/src="data:image\/([^;]+);base64,([^"]+)"/', $bodyForThisMail, $matches)) {
-                $imgType = $matches[1];
-                $imgData = $matches[2];
-                $imgContent = base64_decode($imgData);
-                $cid = uniqid('imgcid');
-                $mail->addStringEmbeddedImage($imgContent, $cid, 'image.' . $imgType, 'base64', 'image/' . $imgType);
-                $bodyForThisMail = preg_replace('/src="data:image\/([^;]+);base64,([^"]+)"/', 'src="cid:' . $cid . '"', $bodyForThisMail);
-            }
-
-            $mail->Body = $bodyForThisMail;
-            $mail->send();
-        } catch (Exception $e) {
-            $success = false;
-            $errors[] = "Erreur pour $email: " . $mail->ErrorInfo;
-        }
+        // Replace the <img> tag's src with the CID
+        $newImgTag = '<img' . $img[1] . 'src="cid:' . $cid . '"' . $img[4] . '>';
+        $html = str_replace($img[0], $newImgTag, $html);
     }
-    if ($success) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'error' => $errors]);
-    }
-    exit;
 }
 
-http_response_code(400);
-echo json_encode(['error' => 'Type non supporté ou liste vide']);
+$success = true;
+$errors = [];
+$atLeastOneSent = false;
+
+foreach ($data['emails'] as $email) {
+    $mail = new PHPMailer(true);
+    try {
+        $mail->isSMTP();
+        $mail->Host = 'smtp.gmail.com';
+        $mail->SMTPAuth = true;
+        $mail->Username = 'malalyassin6@gmail.com';
+        $mail->Password = 'eixm kiqf enqf vnov';
+        $mail->SMTPSecure = 'tls';
+        $mail->Port = 587;
+
+        $mail->setFrom('malalyassin6@gmail.com', $societyName);
+        $mail->addAddress($email);
+
+        // Ajoute ces deux lignes :
+        $mail->CharSet = 'UTF-8';
+        $mail->Encoding = 'base64';
+
+        $mail->isHTML(true);
+        $mail->Subject = $subject;
+        $mail->Body = $html;
+
+        // Attach embedded images
+        foreach ($embeddedImages as $img) {
+            $mail->addEmbeddedImage($img['path'], $img['cid']);
+        }
+
+        $mail->send();
+        $atLeastOneSent = true;
+    } catch (Exception $e) {
+        $success = false;
+        $errors[] = "Erreur pour $email: " . $mail->ErrorInfo;
+    }
+}
+
+// Delete images only if at least one email was sent
+if ($atLeastOneSent) {
+    foreach ($embeddedImages as $img) {
+        if (file_exists($img['path'])) {
+            unlink($img['path']);
+        }
+    }
+}
+
+if ($success) {
+    echo json_encode(['success' => true]);
+} else {
+    echo json_encode(['success' => false, 'error' => implode(", ", $errors)]);
+}
+exit;

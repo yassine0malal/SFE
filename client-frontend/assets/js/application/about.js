@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const nom_prenom = form.elements["name"].value.trim();
             const message = form.elements["message"].value.trim();
             const csrfToken = form.elements["csrf_token"]?.value;
+            const recaptcha = form.elements["g-recaptcha-response"]?.value || "";
 
             // Validation
             let errors = [];
@@ -190,7 +191,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = {
                 nom_prenom,
                 message,
-                csrf_token: csrfToken
+                csrf_token: csrfToken,
+                g_recaptcha_response: recaptcha
             };
 
             try {
