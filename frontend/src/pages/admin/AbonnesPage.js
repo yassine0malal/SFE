@@ -101,6 +101,7 @@ export default function AbonnesPage() {
     ctaUrl: "",
   });
   const [customHtml, setCustomHtml] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     fetch(API_URL, { credentials: "include" })
@@ -314,6 +315,9 @@ export default function AbonnesPage() {
                 E-mail
               </div>
             </div>
+            {fieldErrors.selectedEmails && (
+              <div style={{ color: "red", marginBottom: 8 }}>{fieldErrors.selectedEmails}</div>
+            )}
             {emailList.map((email, idx) => (
               <div
                 key={idx}
@@ -419,23 +423,29 @@ export default function AbonnesPage() {
             ))}
           </>
         )}
-<div>
-                  <h3>Objet de l'email :</h3>
-                  <input
-                    type="text"
-                    value={subject}
-                    onChange={(e) => setSubject(e.target.value)}
-                    style={{
-                      width: "100%",
-                      borderRadius: 8,
-                      border: "1px solid #ccc",
-                      padding: 12,
-                      fontSize: 16,
-                      marginBottom: 20,
-                    }}
-                    placeholder="Sujet de l'email"
-                  />
-                </div>
+        <div>
+          <h3>Objet de l'email :</h3>
+          <input
+            type="text"
+            required
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            style={{
+              width: "100%",
+              borderRadius: 8,
+              border: "1px solid #ccc",
+              padding: 12,
+              fontSize: 16,
+              marginBottom: 4,
+            }}
+            placeholder="Sujet de l'email"
+          />
+          {fieldErrors.subject && (
+            <div style={{ color: "red", marginBottom: 8 }}>
+              {fieldErrors.subject}
+            </div>
+          )}
+        </div>
         {/* Email Mode Selection */}
         <div style={{ margin: "30px 0 20px 0", display: "flex", gap: 20 }}>
           <label>
@@ -546,6 +556,11 @@ export default function AbonnesPage() {
                   marginBottom: 4,
                 }}
               />
+              {fieldErrors.title && (
+                <div style={{ color: "red", marginBottom: 8 }}>
+                  {fieldErrors.title}
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Sous-titre"
@@ -591,6 +606,11 @@ export default function AbonnesPage() {
                   marginBottom: 4,
                 }}
               />
+              {fieldErrors.body && (
+                <div style={{ color: "red", marginBottom: 8 }}>
+                  {fieldErrors.body}
+                </div>
+              )}
               <input
                 type="text"
                 placeholder="Titre du bouton"
@@ -749,6 +769,11 @@ export default function AbonnesPage() {
                         flexDirection: "column",
                       }}
                     />
+                    {fieldErrors.customHtml && (
+                      <div style={{ color: "red", marginBottom: 8 }}>
+                        {fieldErrors.customHtml}
+                      </div>
+                    )}
                   </div>
 
                   {/* Live Preview - Made larger and flexible */}
