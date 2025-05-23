@@ -1,5 +1,5 @@
 import React from 'react';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter, Outlet } from 'react-router-dom';
 import AdminNavbar from './components/admin/AdminNavbar';
 import Accueil from './pages/admin/AccueilPage';
 import Commentaires from './pages/admin/CommentairePage';
@@ -18,181 +18,48 @@ import GalerieAjouterPage from './pages/admin/GalerieAjouterPage';
 import GalerieEditPage from './pages/admin/GalerieEditPage';
 import ClientsPage from './pages/admin/ClientPage';
 import ClientAjouterPage from './pages/admin/clientsAjouterPage';
+import ProtectedRoute from './components/admin/ProtectedRoute'; 
+import NotFound from './components/admin/NotFound';
+
+function ProtectedLayout() {
+  return (
+    <ProtectedRoute>
+      <div style={{ display: 'flex' }}>
+        <AdminNavbar />
+        <div style={{ flex: 1, padding: '1rem' }}>
+          <Outlet />
+        </div>
+      </div>
+    </ProtectedRoute>
+  );
+}
+
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Accueil />
-        </div>
-      </div>  
-    ),
-  },
-  {
     path: '/login',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Login />
-        </div>
-      </div>  
-    ),
+    element: <Login />, // NOT wrapped in ProtectedRoute
   },
   {
-    path: '/commentaires',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Commentaires />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/publications',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Publications />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/services',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Services />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/services/editer/:id',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <ServiceFormPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/services/ajouter',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <ServiceEditPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/publications/ajouter',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <PublicationAddPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/publications/editer/:id',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <PublicationsForm />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/galerie',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <GalariePage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/galerie/ajouter',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <GalerieAjouterPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/galerie/editer/:id',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <GalerieEditPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/clients',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <ClientsPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/clients/ajouter',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <ClientAjouterPage />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/abonnes',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Abonnes />
-        </div>
-      </div>
-    ),
-  },
-  {
-    path: '/contact',
-    element: (
-      <div style={{ display: 'flex' }}>
-        <AdminNavbar />
-        <div style={{ flex: 1, padding: '1rem' }}>
-          <Contact />
-        </div>
-      </div>
-    ),
+    path: '/',
+    element: <ProtectedLayout />, // ProtectedLayout uses ProtectedRoute
+    children: [
+      { index: true, element: <Accueil /> },
+      { path: 'commentaires', element: <Commentaires /> },
+      { path: 'publications', element: <Publications /> },
+      { path: 'publications/ajouter', element: <PublicationAddPage /> },
+      { path: 'publications/editer/:id', element: <PublicationsForm /> },
+      { path: 'services', element: <Services /> },
+      { path: 'services/ajouter', element: <ServiceEditPage /> },
+      { path: 'services/editer/:id', element: <ServiceFormPage /> },
+      { path: 'galerie', element: <GalariePage /> },
+      { path: 'galerie/ajouter', element: <GalerieAjouterPage /> },
+      { path: 'galerie/editer/:id', element: <GalerieEditPage /> },
+      { path: 'clients', element: <ClientsPage /> },
+      { path: 'clients/ajouter', element: <ClientAjouterPage /> },
+      { path: 'abonnes', element: <Abonnes /> },
+      { path: 'contact', element: <Contact /> },
+      { path: '*', element: <NotFound /> },
+    ],
   },
 ]);
 

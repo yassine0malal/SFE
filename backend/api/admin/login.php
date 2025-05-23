@@ -4,12 +4,17 @@ ini_set('session.cookie_secure', 'false'); // true si tu es en HTTPS
 session_start();
 
 require_once __DIR__ . '/../../models/AdminModel.php';
+require_once __DIR__ . '/../../includes/helper.php';
+
 
 header('Content-Type: application/json');
 
 $model = new AdminModel();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if($_SERVER['REQUEST_METHOD']==='GET'){
+
+
+    }else if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents('php://input'), true);
 
 
@@ -28,7 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'admin' => [
                         'id_admin' => $_SESSION['admin_id'],
                         'email' => $_SESSION['admin_email'],
-                        'role' => $_SESSION['admin_role']
+                        'role' => $_SESSION['admin_role'],
+                        'token' => generateToken()
                     ]
                 ]); 
             } else {

@@ -1,46 +1,56 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Ajoute ceci
-
-// Pour le hashage SHA-256
-async function hashPassword(password) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer))
-    .map(b => b.toString(16).padStart(2, "0"))
-    .join("");
-}
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // Utilisé pour la redirection
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
+  // 1. Au chargement de la page, si le cookie existe, redirigez vers /
+  useEffect(() => {
+    const getCookie = name => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    };
+    if (getCookie("auth_token")) {
+      navigate("/");
+    }
+  }, [navigate]);
+
+  // 2. Lors de la connexion, définissez le cookie et rechargez la page
   const handleSubmit = async e => {
     e.preventDefault();
     setError("");
-    const hashedPassword = await hashPassword(password);
+    setLoading(true);
 
-    fetch("http://localhost/SFE-Project/backend/public/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: username,
-        password: password
-      }),
-      credentials: "include"
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          // alert(data.admin.role);
-            navigate("/");
-        } else {
-          setError(data.error || "Erreur de connexion");
-        }
-      })
-      .catch(() => setError("Erreur de connexion"));
+    try {
+      const response = await fetch("http://localhost/SFE-Project/backend/public/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: username,
+          password: password
+        }),
+        credentials: "include"
+      });
+
+      const data = await response.json();
+      setLoading(false);
+
+      if (data.success && data.admin && data.admin.token) {
+        document.cookie = `auth_token=${data.admin.token}; path=/; max-age=${60 * 60 * 24 * 7}`;
+        window.location.reload(); // recharge la page, useEffect redirigera si le cookie est défini
+      } else {
+        setError(data.error || "Erreur de connexion");
+      }
+    } catch (err) {
+      setLoading(false);
+      setError("Erreur de connexion");
+    }
   };
 
   return (
@@ -80,8 +90,12 @@ export default function Login() {
               autoComplete="current-password"
             />
           </div>
-          <button type="submit" style={styles.button}>
-            Login
+          <button type="submit" style={styles.button} disabled={loading}>
+            {loading ? (
+              <span style={styles.spinner}></span>
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
       </div>
@@ -178,5 +192,15 @@ const styles = {
     width: "100%",
     maxWidth: 600,
     height: "auto",
+  },
+  spinner: {
+    display: "inline-block",
+    width: 22,
+    height: 22,
+    border: "3px solid #fff",
+    borderTop: "3px solid #ff5e62",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    verticalAlign: "middle"
   },
 };

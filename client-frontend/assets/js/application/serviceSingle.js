@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const serviceId = urlParams.get('id');
 
     // Debugging: Vérifier l'ID du service
-    console.log('Service ID from URL:', serviceId);
 
     if (!serviceId) {
         showError('Aucun ID de service fourni');
@@ -15,7 +14,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch des services avec gestion d'erreur améliorée
     fetch(API_URL)
         .then(response => {
-            console.log('Response status:', response.status);
             
             if (!response.ok) {
                 throw new Error(`Erreur HTTP! Statut: ${response.status}`);
@@ -23,7 +21,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return response.json();
         })
         .then(services => {
-            console.log('Services reçus:', services);
             
             if (!Array.isArray(services)) {
                 throw new Error('Format de données invalide');
@@ -37,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            console.log('Service trouvé:', currentService);
             renderServiceDetails(currentService);
             populateServicesSidebar(services, currentService);
         })

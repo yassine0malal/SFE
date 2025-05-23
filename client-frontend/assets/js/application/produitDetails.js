@@ -256,6 +256,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         } else {
             commentWrapper.innerHTML = comments.map(comment => `
                 <div class="swiper-slide">
+                <div class="bi-portfolio-details-content headline pera-content">
+				<h1 style="color: #FF3838;"><b>Voir les Commentaires</b></h1>
+			</div> <br> <br><br>
                     <div class="bi-testimonial-item d-flex">
                         <div class="testimonial-img">
                             <img src="assets/img/user/${comment.sex === 'female' ? 'women-comment.jpg' : 'comment-man.jpg'}" 

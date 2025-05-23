@@ -77,6 +77,39 @@ const styleTag = document.createElement("style");
 styleTag.innerHTML = customStyles;
 document.head.appendChild(styleTag);
 
+const updatePreviewWithCSS = (html, previewRef) => {
+  console.log(previewRef,"Updating preview with CSS...", html);
+  // 1. Create a temporary container
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  // 2. Extract all style tags
+  const styles = Array.from(tempDiv.getElementsByTagName('style'))
+    .map(style => style.innerHTML)
+    .join('\n');
+
+  // 3. Remove style tags from HTML
+  const styleElements = Array.from(tempDiv.getElementsByTagName('style'));
+  styleElements.forEach(style => style.remove());
+
+  // 4. Get cleaned HTML with inline styles preserved
+  const cleanHtml = tempDiv.innerHTML;
+
+  // 5. Update preview styles
+  let styleTag = document.getElementById('preview-style');
+  if (!styleTag) {
+    styleTag = document.createElement('style');
+    styleTag.id = 'preview-style';
+    document.head.appendChild(styleTag);
+  }
+  styleTag.innerHTML = styles;
+
+  // 6. Update preview content using ref
+  if (previewRef.current) {
+    previewRef.current.innerHTML = cleanHtml;
+  }
+};
+
 export default function AbonnesPage() {
   const [emailList, setEmailList] = useState([]);
   const [phoneList, setPhoneList] = useState([]);
@@ -102,6 +135,7 @@ export default function AbonnesPage() {
   });
   const [customHtml, setCustomHtml] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
+  const previewRef = useRef(null);
 
   useEffect(() => {
     fetch(API_URL, { credentials: "include" })
@@ -113,6 +147,42 @@ export default function AbonnesPage() {
       .catch(() => setError("Erreur lors du chargement des abonnés"))
       .finally(() => setLoading(false));
   }, []);
+
+ useEffect(() => {
+  if (emailMode === 'custom') {
+    // Create shadow DOM for style isolation
+    const previewContainer = previewRef.current;
+    if (!previewContainer.shadowRoot) {
+      previewContainer.attachShadow({ mode: 'open' });
+    }
+
+    // Parse HTML and extract styles
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(customHtml, 'text/html');
+    
+    // Extract and inject styles
+    const styles = doc.querySelectorAll('style');
+    previewContainer.shadowRoot.innerHTML = '';
+    
+    styles.forEach(style => {
+      previewContainer.shadowRoot.appendChild(style.cloneNode(true));
+    });
+
+    // Inject content without style tags
+    const cleanHtml = customHtml.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
+    const contentDiv = document.createElement('div');
+    contentDiv.innerHTML = cleanHtml;
+    previewContainer.shadowRoot.appendChild(contentDiv);
+  }
+
+  return () => {
+    if (previewRef.current?.shadowRoot) {
+      previewRef.current.shadowRoot.innerHTML = '';
+    }
+  };
+}, [customHtml, emailMode]);
+
+
 
   // Reset content when switching mode
   const handleModeChange = (mode) => {
@@ -249,6 +319,8 @@ export default function AbonnesPage() {
       alert("Erreur réseau");
     }
   };
+
+
 
   return (
     <div
@@ -731,17 +803,8 @@ export default function AbonnesPage() {
                     }}
                   >
                     <ReactQuill
-                      theme="snow"
                       value={customHtml}
-                      onChange={(content) => {
-                        setCustomHtml(content);
-                        // Force preview update
-                        const previewDiv =
-                          document.getElementById("preview-content");
-                        if (previewDiv) {
-                          previewDiv.innerHTML = content;
-                        }
-                      }}
+                      onChange={setCustomHtml}
                       modules={modules}
                       formats={[
                         "header",
@@ -805,7 +868,7 @@ export default function AbonnesPage() {
                       Preview:
                     </h4>
                     <div
-                      id="preview-content"
+                      ref={previewRef}
                       style={{
                         padding: "20px",
                         overflowY: "auto",
@@ -813,7 +876,6 @@ export default function AbonnesPage() {
                         minHeight: "500px",
                         height: "auto",
                       }}
-                      dangerouslySetInnerHTML={{ __html: customHtml }}
                     />
                   </div>
                 </div>
@@ -886,38 +948,4 @@ export default function AbonnesPage() {
   );
 }
 
-<style>
-  {`
-    .ql-container {
-      flex: 1;
-      overflow: visible;
-      height: auto !important;
-      min-height: 300px;
-    }
-    .ql-editor {
-      min-height: 300px;
-      height: auto !important;
-      font-size: 16px;
-      line-height: 1.6;
-      overflow: visible;
-    }
-    .ql-editor p {
-      margin-bottom: 1em;
-    }
-    #preview-content {
-      font-size: 16px;
-      line-height: 1.6;
-      height: auto !important;
-      min-height: 300px;
-    }
-    #preview-content p {
-      margin-bottom: 1em;
-    }
-    .ql-toolbar.ql-snow {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background: white;
-    }
-  `}
-</style>;
+
