@@ -177,50 +177,72 @@ export default function Accueil() {
 
   const isLoggedIn = window.localStorage.getItem("isLoggedIn") === "true";
   return (
-    isLoggedIn &&
-    <div style={container}>
-      <HeaderPart/>
-      <div style={{ height: "50px" }}></div>
-      {/* Stats Cards */}
-      <div style={statsContainer}>
-        <div style={styles.card}>
-          <h2 style={styles.cardNumber}>{loading ? "..." : stats.nbAbonnes}</h2>
-          <div style={styles.cardLabelContainer}>
-            <img src="/icons/line-ascendant-graphic-of-zigzag-arrow.png" alt="Abonnés Icon" style={styles.iconCard} />
-            <p style={styles.cardLabel}>Total Abonnés</p>
+    isLoggedIn && (
+      <div style={container}>
+        <HeaderPart />
+        <div style={{ height: "50px" }}></div>
+        {/* Stats Cards */}
+        <div style={statsContainer}>
+          <div style={styles.card}>
+            <h2 style={styles.cardNumber}>
+              {loading ? "..." : stats.nbAbonnes}
+            </h2>
+            <div style={styles.cardLabelContainer}>
+              <img
+                src="/icons/line-ascendant-graphic-of-zigzag-arrow.png"
+                alt="Abonnés Icon"
+                style={styles.iconCard}
+              />
+              <p style={styles.cardLabel}>Total Subscribs</p>
+            </div>
+          </div>
+          <div style={styles.card}>
+            <h2 style={styles.cardNumber}>
+              {loading ? "..." : stats.nbPublications}
+            </h2>
+            <div style={styles.cardLabelContainer}>
+              <img
+                src="/icons/analytics.png"
+                alt="Projects Icon"
+                style={styles.iconCard}
+              />
+              <p style={styles.cardLabel}>Total Projects</p>
+            </div>
+          </div>
+          <div style={styles.card}>
+            <h2 style={styles.cardNumber}>
+              {loading ? "..." : stats.nbProjectsRequests}
+            </h2>
+            <div style={styles.cardLabelContainer}>
+              <img
+                src="/icons/demand.png"
+                alt="Demandes Icon"
+                style={styles.iconCard}
+              />
+              <p style={styles.cardLabel}>New comments </p>
+            </div>
           </div>
         </div>
-        <div style={styles.card}>
-          <h2 style={styles.cardNumber}>{loading ? "..." : stats.nbPublications}</h2>
-          <div style={styles.cardLabelContainer}>
-            <img src="/icons/analytics.png" alt="Projects Icon" style={styles.iconCard} />
-            <p style={styles.cardLabel}>Total Projets</p>
+        {/* Greeting & Illustration */}
+        <div style={header}>
+          <div style={greetingSection}>
+            <h1 style={styles.greeting}>
+              <span style={{ color: "#333" }}>Bonjour</span> {stats.admin || ""}
+            </h1>
+            <p style={styles.subGreeting}>
+              Bienvenue dans votre espace d’administration
+            </p>
           </div>
-        </div>
-        <div style={styles.card}>
-          <h2 style={styles.cardNumber}>{loading ? "..." : stats.nbProjectsRequests}</h2>
-          <div style={styles.cardLabelContainer}>
-            <img src="/icons/demand.png" alt="Demandes Icon" style={styles.iconCard} />
-            <p style={styles.cardLabel}>Total Demandes</p>
+          <div style={imageContainer}>
+            <img
+              src="/images/dashboard.jpg"
+              alt="Dashboard Illustration"
+              style={styles.image}
+            />
           </div>
         </div>
       </div>
-      {/* Greeting & Illustration */}
-      <div style={header}>
-        <div style={greetingSection}>
-          <h1 style={styles.greeting}>
-            <span style={{ color: "#333" }}>Bonjour</span>{" "}
-            {stats.admin|| ""}
-          </h1>
-          <p style={styles.subGreeting}>
-            Bienvenue dans votre espace d’administration
-          </p>
-        </div>
-        <div style={imageContainer}>
-          <img src="/images/dashboard.jpg" alt="Dashboard Illustration" style={styles.image} />
-        </div>
-      </div>
-    </div>
+    )
   );
 }
 
