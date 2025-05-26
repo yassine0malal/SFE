@@ -175,7 +175,9 @@ export default function Accueil() {
     },
   };
 
+  const isLoggedIn = window.localStorage.getItem("isLoggedIn") === "true";
   return (
+    isLoggedIn &&
     <div style={container}>
       <HeaderPart/>
       <div style={{ height: "50px" }}></div>

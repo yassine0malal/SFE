@@ -108,12 +108,15 @@ export default function Header(){
             <button
   style={styles.logoutButton}
   onClick={() => {
-    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
     fetch("http://localhost/SFE-Project/backend/public/api/logout", {
       credentials: "include"
     })
       .then(res => res.json())
       .then(() => {
+        window.localStorage.removeItem("auth_token");
+        localStorage.setItem("isLoggedIn", false);
+
+        navigate("/login");
         window.location.href = "/login";
       })
       .catch(() => alert("Erreur de déconnexion"));

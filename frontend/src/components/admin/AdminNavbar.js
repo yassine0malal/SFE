@@ -14,8 +14,9 @@ function AdminNavbar() {
   ];
 
   const location = useLocation(); // Get the current path
-
+const isLoggedIn = window.localStorage.getItem("isLoggedIn");
   return (
+    isLoggedIn == "true" &&
     <nav style={styles.nav}>
       <img src="/images/logo-updated.png" alt="Logo" style={styles.logo} />
       <ul style={styles.navLinks}>

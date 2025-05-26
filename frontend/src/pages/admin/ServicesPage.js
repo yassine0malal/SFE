@@ -195,7 +195,6 @@ const ServicesPage = () => {
   //   // Add more mappings as needed
   //   return iconClass;
   // };
-
   return (
     <div style={sliderContainerStyle}>
       <HeaderPart />
